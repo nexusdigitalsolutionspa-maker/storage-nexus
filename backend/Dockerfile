@@ -8,8 +8,14 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
-# Resolve and download all dependencies dynamically (print logs on error)
-RUN go mod tidy > /tmp/tidy.log 2>&1 || (cat /tmp/tidy.log && exit 1)
+# Run go mod tidy and capture log
+RUN go mod tidy > /tmp/tidy.log 2>&1 || true
+
+# Force printing the log file
+RUN cat /tmp/tidy.log
+
+# Run again to fail if needed
+RUN go mod tidy
 
 # Build the binary statically
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go
