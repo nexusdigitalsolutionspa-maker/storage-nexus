@@ -8,12 +8,11 @@ RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 
-# Copy dependency manifests
-COPY go.mod ./
-RUN go mod download
-
 # Copy source code
 COPY . .
+
+# Resolve and download all dependencies dynamically
+RUN go mod tidy
 
 # Build the binary statically
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go
