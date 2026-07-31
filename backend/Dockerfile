@@ -1,10 +1,7 @@
 # ==============================================================================
 # STAGE 1: Build the static Go binary
 # ==============================================================================
-FROM golang:1.21-alpine AS builder
-
-# Install build dependencies
-RUN apk add --no-cache git ca-certificates
+FROM golang:1.21 AS builder
 
 WORKDIR /app
 
