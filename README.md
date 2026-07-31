@@ -92,3 +92,4 @@ Este repositorio está estructurado para que Coolify pueda leer e importar el st
 2. Apunta Coolify a tu repositorio de Git.
 3. Configura las variables de entorno en el panel de Coolify basándote en `.env.example`.
 4. Coolify construirá automáticamente cada contenedor usando sus respectivos `Dockerfile` y expondrá los puertos de forma segura usando Traefik como proxy reverso con TLS.
+
