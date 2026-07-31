@@ -1,21 +1,16 @@
 # ==============================================================================
 # STAGE 1: Build the static Go binary
 # ==============================================================================
-FROM golang:1.21 AS builder
+FROM golang:1.25 AS builder
 
 WORKDIR /app
 
+# Copy dependency definitions and download them first (cached layer)
+COPY go.mod go.sum ./
+RUN go mod download
+
 # Copy source code
 COPY . .
-
-# Run go mod tidy and capture log
-RUN go mod tidy > /tmp/tidy.log 2>&1 || true
-
-# Force printing the log file
-RUN cat /tmp/tidy.log
-
-# Run again to fail if needed
-RUN go mod tidy
 
 # Build the binary statically
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go
