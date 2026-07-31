@@ -1,7 +1,6 @@
 package files
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
