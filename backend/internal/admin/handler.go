@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 
 	"nexus-storage/backend/internal/auth"
 	"nexus-storage/backend/internal/db"
