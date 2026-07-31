@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # Database Service (PostgreSQL)
+  postgres:
+    image: postgres:15-alpine
+    container_name: nexus_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-nexus_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nexus_password}
+      POSTGRES_DB: ${DB_NAME:-nexus_storage}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nexus_network
+
+  # Cache and Queue Service (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: nexus_redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nexus_network
+
+  # Object Storage Service (MinIO)
+  minio:
+    image: minio/minio:latest
+    container_name: nexus_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-nexus_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-nexus_minio_admin_secret}
+      # Configuración del Webhook para notificar subidas exitosas de vuelta a la API de Go
+      MINIO_NOTIFY_WEBHOOK_ENABLE_primary: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://api:8080/api/v1/files/webhook"
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_primary: ${WEBHOOK_SECRET:-nexus_storage_webhook_verification_secret_99999}
+      MINIO_KMS_SECRET_KEY: ${MINIO_SSE_MASTER_KEY:-nexus-kms-key:32byteskeyforsecuringsubmittedfiles=}
+    volumes:
+      - minio_data:/data
+    networks:
+      - nexus_network
+
+  # Backend REST API Service (Go + Fiber)
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nexus_api
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    environment:
+      - PORT=8080
+      - ENV=development
+      - APP_URL=http://localhost:8080
+      - CLIENT_FRONTEND_URL=http://localhost:5173
+      - ADMIN_FRONTEND_URL=http://localhost:5174
+      - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_access_token_key_12345}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-super_secret_jwt_refresh_token_key_54321}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-nexus_storage_webhook_verification_secret_99999}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-nexus_user}
+      - DB_PASSWORD=${DB_PASSWORD:-nexus_password}
+      - DB_NAME=${DB_NAME:-nexus_storage}
+      - DB_SSLMODE=disable
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_PUBLIC_ENDPOINT=${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-nexus_minio_admin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-nexus_minio_admin_secret}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-nexus-storage}
+      - MINIO_USE_SSL=false
+    networks:
+      - nexus_network
+
+  # Client Frontend (React SPA)
+  frontend-cliente:
+    build:
+      context: ./frontend-cliente
+      dockerfile: Dockerfile
+    container_name: nexus_frontend_cliente
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - nexus_network
+
+  # Admin Frontend (React SPA)
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    container_name: nexus_frontend_admin
+    restart: always
+    ports:
+      - "5174:80"
+    depends_on:
+      - api
+    networks:
+      - nexus_network
+
+networks:
+  nexus_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
