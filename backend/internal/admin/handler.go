@@ -11,7 +11,6 @@ import (
 	"nexus-storage/backend/internal/auth"
 	"nexus-storage/backend/internal/db"
 	"nexus-storage/backend/internal/models"
-	"nexus-storage/backend/internal/storage"
 )
 
 // GetStats returns global metrics for the admin dashboard
