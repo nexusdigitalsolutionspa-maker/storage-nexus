@@ -12,8 +12,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the binary statically
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go
+# Build the binary statically (print compiler output on failure)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go > /tmp/build.log 2>&1 || (cat /tmp/build.log && exit 1)
 
 # ==============================================================================
 # STAGE 2: Run the binary in a lightweight Alpine container
