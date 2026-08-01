@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-nexus_password}
       POSTGRES_DB: ${DB_NAME:-nexus_storage}
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -24,7 +24,7 @@ services:
     restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
     ports:
-      - "6379:6379"
+      - "16379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -37,8 +37,8 @@ services:
     restart: always
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "19000:9000"
+      - "19001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-nexus_minio_admin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-nexus_minio_admin_secret}
@@ -60,7 +60,7 @@ services:
     container_name: nexus_api
     restart: always
     ports:
-      - "8080:8080"
+      - "18080:8080"
     depends_on:
       - postgres
       - redis
@@ -100,7 +100,7 @@ services:
     container_name: nexus_frontend_cliente
     restart: always
     ports:
-      - "5173:80"
+      - "15173:80"
     depends_on:
       - api
     networks:
@@ -114,7 +114,7 @@ services:
     container_name: nexus_frontend_admin
     restart: always
     ports:
-      - "5174:80"
+      - "15174:80"
     depends_on:
       - api
     networks:
