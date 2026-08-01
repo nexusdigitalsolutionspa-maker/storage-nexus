@@ -125,54 +125,68 @@ func seedData() {
 
 	// 2. Seed Default Admin User
 	adminEmail := "admin@nexus.com"
-	var existingAdmin models.User
-	if err := DB.Where("email = ?", adminEmail).First(&existingAdmin).Error; err != nil {
-		// Admin does not exist, create one
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin_password_123"), bcrypt.DefaultCost)
-		if err != nil {
-			log.Fatalf("Error hashing password for default admin: %v", err)
-		}
+	hashedAdminPassword, err := bcrypt.GenerateFromPassword([]byte("admin_password_123"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Error hashing password for default admin: %v", err)
+	}
 
-		adminUser := models.User{
+	var adminUser models.User
+	if err := DB.Where("email = ?", adminEmail).First(&adminUser).Error; err != nil {
+		// Admin does not exist, create one
+		adminUser = models.User{
 			Name:         "Nexus Admin",
 			Email:        adminEmail,
-			PasswordHash: string(hashedPassword),
+			PasswordHash: string(hashedAdminPassword),
 			Role:         "admin",
 			PlanID:       enterprisePlan.ID,
 			IsSuspended:  false,
 		}
-
 		if err := DB.Create(&adminUser).Error; err != nil {
 			log.Printf("Error seeding admin: %v", err)
 		} else {
 			log.Println("Seeded default administrator user (admin@nexus.com / admin_password_123).")
 		}
+	} else {
+		// Force update password and roles to ensure default credentials always work
+		DB.Model(&adminUser).Updates(models.User{
+			PasswordHash: string(hashedAdminPassword),
+			Role:         "admin",
+			PlanID:       enterprisePlan.ID,
+		})
+		log.Println("Verified/Updated default admin user credentials.")
 	}
 
 	// 3. Seed Default Client User for testing
 	clientEmail := "client@nexus.com"
-	var existingClient models.User
-	if err := DB.Where("email = ?", clientEmail).First(&existingClient).Error; err != nil {
-		// Client does not exist, create one
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("client_password_123"), bcrypt.DefaultCost)
-		if err != nil {
-			log.Fatalf("Error hashing password for default client: %v", err)
-		}
+	hashedClientPassword, err := bcrypt.GenerateFromPassword([]byte("client_password_123"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Error hashing password for default client: %v", err)
+	}
 
-		clientUser := models.User{
+	var clientUser models.User
+	if err := DB.Where("email = ?", clientEmail).First(&clientUser).Error; err != nil {
+		// Client does not exist, create one
+		clientUser = models.User{
 			Name:         "Test Client",
 			Email:        clientEmail,
-			PasswordHash: string(hashedPassword),
+			PasswordHash: string(hashedClientPassword),
 			Role:         "client",
 			PlanID:       basicPlan.ID,
 			IsSuspended:  false,
 		}
-
 		if err := DB.Create(&clientUser).Error; err != nil {
 			log.Printf("Error seeding test client: %v", err)
 		} else {
 			log.Println("Seeded default client user (client@nexus.com / client_password_123).")
 		}
+	} else {
+		// Force update password and roles
+		DB.Model(&clientUser).Updates(models.User{
+			PasswordHash: string(hashedClientPassword),
+			Role:         "client",
+			PlanID:       basicPlan.ID,
+		})
+		log.Println("Verified/Updated default client user credentials.")
 	}
 }
 
