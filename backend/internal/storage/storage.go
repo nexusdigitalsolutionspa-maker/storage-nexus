@@ -70,11 +70,6 @@ func InitializeMinio() {
 func GeneratePresignedUploadURL(storageKey, mimeType string, expires time.Duration) (*url.URL, error) {
 	ctx := context.Background()
 
-	// Setup custom headers for the presigned URL
-	reqParams := make(url.Values)
-	// Optionally enforce content-type during client PUT upload
-	// reqParams.Set("response-content-type", mimeType)
-
 	// Generate presigned PUT URL
 	presignedURL, err := MinioClient.PresignedPutObject(ctx, BucketName, storageKey, expires)
 	if err != nil {

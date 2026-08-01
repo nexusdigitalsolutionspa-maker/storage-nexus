@@ -13,7 +13,7 @@ RUN go mod download
 COPY . .
 
 # Build the binary statically with memory limits (GOGC and GOMAXPROCS) to prevent VPS OOM crashes
-RUN GOGC=20 GOMAXPROCS=1 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go > /tmp/build.log 2>&1 || (cat /tmp/build.log >&2 && exit 1)
+RUN GOGC=20 GOMAXPROCS=1 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main ./cmd/api/main.go
 
 # ==============================================================================
 # STAGE 2: Run the binary in a lightweight Alpine container

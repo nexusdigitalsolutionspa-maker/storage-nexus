@@ -202,7 +202,7 @@ func Login(c *fiber.Ctx) error {
 
 // Refresh Token request uses Cookie (highly secure)
 func Refresh(c *fiber.Ctx) error {
-	rawToken := c.Cookie("refresh_token")
+	rawToken := c.Cookies("refresh_token")
 	if rawToken == "" {
 		// Fallback to body read if cookies are not used (e.g. CLI/external apps)
 		type FallbackReq struct {
@@ -271,7 +271,7 @@ func Refresh(c *fiber.Ctx) error {
 
 // Logout revokes refresh token
 func Logout(c *fiber.Ctx) error {
-	rawToken := c.Cookie("refresh_token")
+	rawToken := c.Cookies("refresh_token")
 	if rawToken != "" {
 		hash := sha256.Sum256([]byte(rawToken))
 		tokenHash := hex.EncodeToString(hash[:])
