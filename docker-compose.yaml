@@ -14,8 +14,7 @@ services:
       - "15432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - nexus_network
+
 
   # Cache and Queue Service (Redis)
   redis:
@@ -27,8 +26,7 @@ services:
       - "16379:6379"
     volumes:
       - redis_data:/data
-    networks:
-      - nexus_network
+
 
   # Object Storage Service (MinIO)
   minio:
@@ -49,8 +47,7 @@ services:
       MINIO_KMS_SECRET_KEY: "nexus-kms-key:dEoCh987gRe+MJsnqMpT46EIRmRCssT0scmxymWJ/Cw="
     volumes:
       - minio_data:/data
-    networks:
-      - nexus_network
+
 
   # Backend REST API Service (Go + Fiber)
   api:
@@ -89,8 +86,7 @@ services:
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-nexus_minio_admin_secret}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-nexus-storage}
       - MINIO_USE_SSL=false
-    networks:
-      - nexus_network
+
 
   # Client Frontend (React SPA)
   frontend-cliente:
@@ -105,8 +101,7 @@ services:
       - "15173:80"
     depends_on:
       - api
-    networks:
-      - nexus_network
+
 
   # Admin Frontend (React SPA)
   frontend-admin:
@@ -121,12 +116,9 @@ services:
       - "15174:80"
     depends_on:
       - api
-    networks:
-      - nexus_network
 
-networks:
-  nexus_network:
-    driver: bridge
+
+
 
 volumes:
   postgres_data:
