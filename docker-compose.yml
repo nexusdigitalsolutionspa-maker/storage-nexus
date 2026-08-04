@@ -45,6 +45,7 @@ services:
       MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://api:8080/api/v1/files/webhook"
       MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_primary: ${WEBHOOK_SECRET:-nexus_storage_webhook_verification_secret_99999}
       MINIO_KMS_SECRET_KEY: "nexus-kms-key:dEoCh987gRe+MJsnqMpT46EIRmRCssT0scmxymWJ/Cw="
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
     volumes:
       - minio_data:/data
 
