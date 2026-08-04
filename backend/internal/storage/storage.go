@@ -76,7 +76,7 @@ func GeneratePresignedUploadURL(storageKey, mimeType string, expires time.Durati
 		return nil, fmt.Errorf("failed to generate presigned PUT URL: %w", err)
 	}
 
-	return presignedURL, nil
+	return replaceMinioHostWithPublic(presignedURL), nil
 }
 
 // GeneratePresignedDownloadURL generates a short-lived GET URL for direct file download
@@ -92,7 +92,7 @@ func GeneratePresignedDownloadURL(storageKey, originalName string, expires time.
 		return nil, fmt.Errorf("failed to generate presigned GET URL: %w", err)
 	}
 
-	return presignedURL, nil
+	return replaceMinioHostWithPublic(presignedURL), nil
 }
 
 // GeneratePresignedViewURL generates a short-lived GET URL for inline preview (no attachment header)
@@ -107,7 +107,22 @@ func GeneratePresignedViewURL(storageKey string, expires time.Duration) (*url.UR
 		return nil, fmt.Errorf("failed to generate presigned preview URL: %w", err)
 	}
 
-	return presignedURL, nil
+	return replaceMinioHostWithPublic(presignedURL), nil
+}
+
+func replaceMinioHostWithPublic(u *url.URL) *url.URL {
+	publicEndpoint := os.Getenv("MINIO_PUBLIC_ENDPOINT")
+	if publicEndpoint == "" || publicEndpoint == "http://localhost:9000" {
+		return u
+	}
+	publicURL, err := url.Parse(publicEndpoint)
+	if err != nil {
+		log.Printf("Error parsing MINIO_PUBLIC_ENDPOINT: %v", err)
+		return u
+	}
+	u.Scheme = publicURL.Scheme
+	u.Host = publicURL.Host
+	return u
 }
 
 // DeleteObject deletes a file object from MinIO
