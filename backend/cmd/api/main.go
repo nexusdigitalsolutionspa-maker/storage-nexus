@@ -43,8 +43,13 @@ func main() {
 
 	// Configure CORS explicitly (no "*" in production)
 	allowedOrigins := "http://localhost:5173,http://localhost:5174"
-	if os.Getenv("ENV") == "production" {
-		allowedOrigins = os.Getenv("CLIENT_FRONTEND_URL") + "," + os.Getenv("ADMIN_FRONTEND_URL")
+	clientUrl := os.Getenv("CLIENT_FRONTEND_URL")
+	adminUrl := os.Getenv("ADMIN_FRONTEND_URL")
+	if clientUrl != "" && adminUrl != "" {
+		allowedOrigins = allowedOrigins + "," + clientUrl + "," + adminUrl
+	}
+	if os.Getenv("ENV") == "production" && clientUrl != "" && adminUrl != "" {
+		allowedOrigins = clientUrl + "," + adminUrl
 	}
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
