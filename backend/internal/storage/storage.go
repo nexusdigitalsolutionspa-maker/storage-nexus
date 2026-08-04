@@ -70,13 +70,13 @@ func InitializeMinio() {
 func GeneratePresignedUploadURL(storageKey, mimeType string, expires time.Duration) (*url.URL, error) {
 	ctx := context.Background()
 
-	// Generate presigned PUT URL
-	presignedURL, err := MinioClient.PresignedPutObject(ctx, BucketName, storageKey, expires)
+	client := getClientForSigning()
+	presignedURL, err := client.PresignedPutObject(ctx, BucketName, storageKey, expires)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate presigned PUT URL: %w", err)
 	}
 
-	return replaceMinioHostWithPublic(presignedURL), nil
+	return presignedURL, nil
 }
 
 // GeneratePresignedDownloadURL generates a short-lived GET URL for direct file download
@@ -87,12 +87,13 @@ func GeneratePresignedDownloadURL(storageKey, originalName string, expires time.
 	// Force download behavior and specify downloaded file name
 	reqParams.Set("response-content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", originalName))
 
-	presignedURL, err := MinioClient.PresignedGetObject(ctx, BucketName, storageKey, expires, reqParams)
+	client := getClientForSigning()
+	presignedURL, err := client.PresignedGetObject(ctx, BucketName, storageKey, expires, reqParams)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate presigned GET URL: %w", err)
 	}
 
-	return replaceMinioHostWithPublic(presignedURL), nil
+	return presignedURL, nil
 }
 
 // GeneratePresignedViewURL generates a short-lived GET URL for inline preview (no attachment header)
@@ -102,27 +103,39 @@ func GeneratePresignedViewURL(storageKey string, expires time.Duration) (*url.UR
 	// Keep inline to view in browser
 	reqParams.Set("response-content-disposition", "inline")
 
-	presignedURL, err := MinioClient.PresignedGetObject(ctx, BucketName, storageKey, expires, reqParams)
+	client := getClientForSigning()
+	presignedURL, err := client.PresignedGetObject(ctx, BucketName, storageKey, expires, reqParams)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate presigned preview URL: %w", err)
 	}
 
-	return replaceMinioHostWithPublic(presignedURL), nil
+	return presignedURL, nil
 }
 
-func replaceMinioHostWithPublic(u *url.URL) *url.URL {
+func getClientForSigning() *minio.Client {
 	publicEndpoint := os.Getenv("MINIO_PUBLIC_ENDPOINT")
 	if publicEndpoint == "" || publicEndpoint == "http://localhost:9000" {
-		return u
+		return MinioClient
 	}
-	publicURL, err := url.Parse(publicEndpoint)
+	u, err := url.Parse(publicEndpoint)
 	if err != nil {
-		log.Printf("Error parsing MINIO_PUBLIC_ENDPOINT: %v", err)
-		return u
+		log.Printf("Error parsing public endpoint for signing: %v", err)
+		return MinioClient
 	}
-	u.Scheme = publicURL.Scheme
-	u.Host = publicURL.Host
-	return u
+
+	accessKeyID := os.Getenv("MINIO_ACCESS_KEY")
+	secretAccessKey := os.Getenv("MINIO_SECRET_KEY")
+	useSSL := u.Scheme == "https"
+
+	signingClient, err := minio.New(u.Host, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		log.Printf("Error creating signing client: %v", err)
+		return MinioClient
+	}
+	return signingClient
 }
 
 // DeleteObject deletes a file object from MinIO
