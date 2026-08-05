@@ -10,6 +10,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/notification"
 )
 
 var MinioClient *minio.Client
@@ -63,6 +64,25 @@ func InitializeMinio() {
 		log.Printf("Created bucket %s in MinIO.", BucketName)
 	} else {
 		log.Printf("Bucket %s already exists.", BucketName)
+	}
+
+	// Configure bucket notifications to trigger our Go API webhook
+	arn, err := notification.NewArnFromString("arn:minio:sqs::primary:webhook")
+	if err != nil {
+		log.Printf("Warning: Failed to parse notification ARN: %v", err)
+	} else {
+		config := notification.NewConfig(arn)
+		config.AddEvents(notification.ObjectCreatedAll)
+
+		notificationConfig := notification.Configuration{}
+		notificationConfig.AddQueue(config)
+
+		err = MinioClient.SetBucketNotification(ctx, BucketName, notificationConfig)
+		if err != nil {
+			log.Printf("Warning: Failed to set bucket notification for webhook: %v", err)
+		} else {
+			log.Println("Successfully configured bucket notifications for webhook.")
+		}
 	}
 }
 
