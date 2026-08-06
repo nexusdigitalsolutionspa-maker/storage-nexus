@@ -4,7 +4,7 @@ import {
   Trash2, Download, Eye, ExternalLink, RefreshCw, Copy, Check, 
   Lock, Calendar, ChevronRight, Search, AlertTriangle, User, 
   HelpCircle, ArrowUpRight, ShieldCheck, X, CheckCircle, Info,
-  Settings, Layers, Database, Activity, RefreshCcw, EyeOff
+  Settings, Layers, Database, Activity, RefreshCcw, EyeOff, Menu
 } from 'lucide-react';
 import axios from 'axios';
 import { 
@@ -35,6 +35,12 @@ export default function App() {
   const [view, setView] = useState('dashboard'); // dashboard | clients | plans | logs
   const [loading, setLoading] = useState(false);
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
+  
+  // Mobile sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Toasts
   const [toasts, setToasts] = useState([]);
@@ -152,19 +158,23 @@ export default function App() {
   };
 
   // Suspend/Reactivate Client
-  const handleToggleSuspend = async (client) => {
+  const handleToggleSuspend = (client) => {
     const actionText = client.is_suspended ? 'reactivar' : 'suspender';
-    if (!confirm(`¿Seguro que deseas ${actionText} la cuenta de ${client.name}?`)) return;
-
-    try {
-      await api.put(`/admin/clients/${client.id}/suspend`, { suspend: !client.is_suspended });
-      addToast(`Cliente ${client.is_suspended ? 'reactivado' : 'suspendido'} correctamente`);
-      fetchClients();
-      fetchStats();
-      fetchAuditLogs();
-    } catch (err) {
-      addToast('Error al actualizar estado del cliente', 'error');
-    }
+    showConfirm(
+      'Confirmación',
+      `¿Seguro que deseas ${actionText} la cuenta de ${client.name}?`,
+      async () => {
+        try {
+          await api.put(`/admin/clients/${client.id}/suspend`, { suspend: !client.is_suspended });
+          addToast(`Cliente ${client.is_suspended ? 'reactivado' : 'suspendido'} correctamente`);
+          fetchClients();
+          fetchStats();
+          fetchAuditLogs();
+        } catch (err) {
+          addToast('Error al actualizar estado del cliente', 'error');
+        }
+      }
+    );
   };
 
   // Change Plan Modal
@@ -232,17 +242,22 @@ export default function App() {
     }
   };
 
-  const handleDeletePlan = async (id) => {
-    if (!confirm('¿Seguro que deseas eliminar este plan?')) return;
-    try {
-      await api.delete(`/admin/plans/${id}`);
-      addToast('Plan eliminado');
-      fetchPlans();
-      fetchStats();
-      fetchAuditLogs();
-    } catch (err) {
-      addToast(err.response?.data?.error || 'Error al eliminar plan', 'error');
-    }
+  const handleDeletePlan = (id) => {
+    showConfirm(
+      'Eliminar Plan',
+      '¿Seguro que deseas eliminar este plan?',
+      async () => {
+        try {
+          await api.delete(`/admin/plans/${id}`);
+          addToast('Plan eliminado');
+          fetchPlans();
+          fetchStats();
+          fetchAuditLogs();
+        } catch (err) {
+          addToast(err.response?.data?.error || 'Error al eliminar plan', 'error');
+        }
+      }
+    );
   };
 
   // Auth Submit
@@ -294,12 +309,17 @@ export default function App() {
     { name: 'Plan Enterprise', Usado: 128.0, Disponible: 1000 },
   ];
 
+  const showConfirm = (title, message, onConfirm) => {
+    setConfirmModal({ open: true, title, message, onConfirm });
+  };
+  const closeConfirm = () => setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+
   if (!token) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-blue-500 selection:text-white">
         <header className="px-6 py-4 flex justify-between items-center max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Nexus Storage Logo" className="h-9 w-9 object-contain" />
+            <img src="/logo.png" alt="Nexus Storage Logo" className="h-16 w-16 object-contain" />
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">NEXUS CONSOLE</span>
           </div>
         </header>
@@ -369,19 +389,35 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex selection:bg-blue-500 selection:text-white">
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" className="h-8" alt="Nexus" />
+          <span className="text-sm font-bold text-white tracking-wider">NEXUS CONSOLE</span>
+        </div>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-400 hover:text-white">
+          <Menu className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-900 bg-slate-950 flex flex-col justify-between shrink-0 sticky top-0 h-screen">
+      <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 z-50 md:z-auto transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} border-r border-slate-900 bg-slate-950 flex flex-col justify-between shrink-0`}>
         <div className="flex flex-col">
           {/* Logo */}
           <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-900">
-            <img src="/logo.png" alt="Nexus Storage Logo" className="h-8 w-8 object-contain" />
+            <img src="/logo.png" alt="Nexus Storage Logo" className="h-12 w-12 object-contain" />
             <span className="font-extrabold tracking-tight text-white uppercase">Nexus Console</span>
           </div>
 
           {/* Navigation Links */}
           <nav className="p-4 space-y-1">
             <button 
-              onClick={() => setView('dashboard')}
+              onClick={() => { setView('dashboard'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'dashboard' ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -389,7 +425,7 @@ export default function App() {
               <Activity className="h-4 w-4" /> Servidores y Nodos
             </button>
             <button 
-              onClick={() => setView('clients')}
+              onClick={() => { setView('clients'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'clients' ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -397,7 +433,7 @@ export default function App() {
               <Users className="h-4 w-4" /> Gestión de Clientes
             </button>
             <button 
-              onClick={() => setView('plans')}
+              onClick={() => { setView('plans'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'plans' ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -405,7 +441,7 @@ export default function App() {
               <Layers className="h-4 w-4" /> Planes Tarifarios
             </button>
             <button 
-              onClick={() => setView('logs')}
+              onClick={() => { setView('logs'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'logs' ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -432,7 +468,7 @@ export default function App() {
       </aside>
 
       {/* Main Panel */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen pt-16 md:pt-0">
         {/* Dashboard View */}
         {view === 'dashboard' && (
           <main className="p-8 space-y-8 flex-1 overflow-y-auto animate-fade-in">
@@ -829,6 +865,25 @@ export default function App() {
                 <button type="submit" className="btn-primary text-xs py-2">Guardar Plan</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">{confirmModal.title}</h3>
+            </div>
+            <p className="text-sm text-slate-400">{confirmModal.message}</p>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={closeConfirm} className="btn-secondary text-sm px-4 py-2">Cancelar</button>
+              <button onClick={() => { confirmModal.onConfirm(); closeConfirm(); }} className="btn-danger text-sm px-4 py-2">Confirmar</button>
+            </div>
           </div>
         </div>
       )}

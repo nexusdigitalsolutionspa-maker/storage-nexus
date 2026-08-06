@@ -4,7 +4,7 @@ import {
   Trash2, Share2, Download, Eye, ExternalLink, RefreshCw, Copy, Check, 
   Lock, Calendar, ChevronRight, Search, FileText, Image as ImageIcon, 
   Video, Music, AlertTriangle, User, HelpCircle, ArrowUpRight, ShieldCheck, 
-  X, CheckCircle, Info, ChevronDown
+  X, CheckCircle, Info, ChevronDown, Menu
 } from 'lucide-react';
 import axios from 'axios';
 import { 
@@ -87,6 +87,12 @@ export default function App() {
   const [newKeyScopes, setNewKeyScopes] = useState({ read: true, write: false, delete: false });
   const [generatedKeyRaw, setGeneratedKeyRaw] = useState('');
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
+  
+  // Mobile sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // History State
   const [auditLogs, setAuditLogs] = useState([]);
@@ -258,28 +264,38 @@ export default function App() {
   };
 
   // Actions
-  const handleDeleteFile = async (id) => {
-    if (!confirm('¿Seguro que deseas eliminar este archivo?')) return;
-    try {
-      await api.delete(`/files/${id}`);
-      addToast('Archivo eliminado');
-      fetchDirectory(currentFolderId);
-      fetchProfile();
-      if (previewFile?.id === id) setPreviewFile(null);
-    } catch (err) {
-      addToast('Error al eliminar archivo', 'error');
-    }
+  const handleDeleteFile = (id) => {
+    showConfirm(
+      'Eliminar archivo',
+      '¿Estás seguro de que deseas eliminar este archivo? Esta acción no se puede deshacer.',
+      async () => {
+        try {
+          await api.delete(`/files/${id}`);
+          addToast('Archivo eliminado');
+          fetchDirectory(currentFolderId);
+          fetchProfile();
+          if (previewFile?.id === id) setPreviewFile(null);
+        } catch (err) {
+          addToast('Error al eliminar archivo', 'error');
+        }
+      }
+    );
   };
 
-  const handleDeleteFolder = async (id) => {
-    if (!confirm('¿Seguro que deseas eliminar esta carpeta y todo su contenido?')) return;
-    try {
-      await api.delete(`/files/folders/${id}`);
-      addToast('Carpeta eliminada');
-      fetchDirectory(currentFolderId);
-    } catch (err) {
-      addToast('Error al eliminar carpeta', 'error');
-    }
+  const handleDeleteFolder = (id) => {
+    showConfirm(
+      'Eliminar carpeta',
+      '¿Estás seguro de que deseas eliminar esta carpeta y todo su contenido?',
+      async () => {
+        try {
+          await api.delete(`/files/folders/${id}`);
+          addToast('Carpeta eliminada');
+          fetchDirectory(currentFolderId);
+        } catch (err) {
+          addToast('Error al eliminar carpeta', 'error');
+        }
+      }
+    );
   };
 
   const handleDownloadFile = async (file) => {
@@ -364,15 +380,20 @@ export default function App() {
     }
   };
 
-  const handleRevokeApiKey = async (id) => {
-    if (!confirm('¿Seguro que deseas revocar esta API Key? Dejará de funcionar inmediatamente.')) return;
-    try {
-      await api.delete(`/auth/keys/${id}`);
-      addToast('API Key revocada');
-      fetchApiKeys();
-    } catch (err) {
-      addToast('Error al revocar clave', 'error');
-    }
+  const handleRevokeApiKey = (id) => {
+    showConfirm(
+      'Revocar API Key',
+      '¿Seguro que deseas revocar esta API Key? Dejará de funcionar inmediatamente.',
+      async () => {
+        try {
+          await api.delete(`/auth/keys/${id}`);
+          addToast('API Key revocada');
+          fetchApiKeys();
+        } catch (err) {
+          addToast('Error al revocar clave', 'error');
+        }
+      }
+    );
   };
 
   // History / Audit log
@@ -513,7 +534,7 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-teal-500 selection:text-white">
         <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Nexus Storage Logo" className="h-9 w-9 object-contain" />
+            <img src="/logo.png" alt="Nexus Storage Logo" className="h-16 w-16 object-contain" />
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">NEXUS STORAGE</span>
           </div>
           <a href="/" className="text-slate-400 hover:text-teal-400 text-sm font-medium transition-all">Acceder a mi panel</a>
@@ -612,7 +633,7 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-teal-500 selection:text-white">
         <header className="px-6 py-4 flex justify-between items-center max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Nexus Storage Logo" className="h-9 w-9 object-contain" />
+            <img src="/logo.png" alt="Nexus Storage Logo" className="h-16 w-16 object-contain" />
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">NEXUS STORAGE</span>
           </div>
         </header>
@@ -715,22 +736,43 @@ export default function App() {
     );
   }
 
+  const showConfirm = (title, message, onConfirm) => {
+    setConfirmModal({ open: true, title, message, onConfirm });
+  };
+  const closeConfirm = () => setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+
   // Dashboard Main View layout
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex selection:bg-teal-500 selection:text-white">
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" className="h-8" alt="Nexus" />
+          <span className="text-sm font-bold text-white tracking-wider">NEXUS STORAGE</span>
+        </div>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-400 hover:text-white">
+          <Menu className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar navigation */}
-      <aside className="w-64 border-r border-slate-900 bg-slate-950 flex flex-col justify-between shrink-0 sticky top-0 h-screen">
+      <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 z-50 md:z-auto transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} border-r border-slate-900 bg-slate-950 flex flex-col justify-between shrink-0`}>
         <div className="flex flex-col">
           {/* Logo */}
           <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-900">
-            <img src="/logo.png" alt="Nexus Storage Logo" className="h-8 w-8 object-contain" />
+            <img src="/logo.png" alt="Nexus Storage Logo" className="h-12 w-12 object-contain" />
             <span className="font-extrabold tracking-tight text-white">NEXUS STORAGE</span>
           </div>
 
           {/* Navigation Links */}
           <nav className="p-4 space-y-1">
             <button 
-              onClick={() => setView('dashboard')}
+              onClick={() => { setView('dashboard'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'dashboard' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -738,7 +780,7 @@ export default function App() {
               <HardDrive className="h-4 w-4" /> Dashboard
             </button>
             <button 
-              onClick={() => setView('files')}
+              onClick={() => { setView('files'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'files' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -746,7 +788,7 @@ export default function App() {
               <Folder className="h-4 w-4" /> Mis Archivos
             </button>
             <button 
-              onClick={() => setView('api')}
+              onClick={() => { setView('api'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'api' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -754,7 +796,7 @@ export default function App() {
               <Key className="h-4 w-4" /> Mi API
             </button>
             <button 
-              onClick={() => setView('history')}
+              onClick={() => { setView('history'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 view === 'history' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
               }`}
@@ -784,7 +826,7 @@ export default function App() {
       </aside>
 
       {/* Main Content Pane */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen pt-16 md:pt-0">
         {/* Upload status floating bar */}
         {uploadProgress && (
           <div className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex justify-between items-center gap-4 animate-pulse">
@@ -1479,6 +1521,25 @@ axios.post('${API_URL}/files/upload-request', {
                 <button onClick={() => { setIsKeyModalOpen(false); setGeneratedKeyRaw(''); }} className="btn-primary w-full justify-center text-xs py-2">Cerrar</button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">{confirmModal.title}</h3>
+            </div>
+            <p className="text-sm text-slate-400">{confirmModal.message}</p>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={closeConfirm} className="btn-secondary text-sm px-4 py-2">Cancelar</button>
+              <button onClick={() => { confirmModal.onConfirm(); closeConfirm(); }} className="btn-danger text-sm px-4 py-2">Confirmar</button>
+            </div>
           </div>
         </div>
       )}
