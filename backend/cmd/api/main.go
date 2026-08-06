@@ -94,6 +94,7 @@ func main() {
 	sharesGroup.Delete("/:id", middleware.RequireApiKeyOrJWT, middleware.CheckScope("delete"), links.RevokeShareLink)
 	sharesGroup.Get("/info/:token", middleware.RateLimiter, links.GetShareLinkInfo)
 	sharesGroup.Post("/download/:token", middleware.RateLimiter, links.DownloadSharedFile)
+	sharesGroup.Get("/view/:token", middleware.RateLimiter, links.ViewSharedFile)
 
 	// --- MinIO Event Webhook (Authentication checked internally) ---
 	api.Post("/files/webhook", files.MinioWebhook)

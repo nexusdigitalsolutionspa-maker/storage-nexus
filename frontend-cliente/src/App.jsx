@@ -79,6 +79,7 @@ export default function App() {
   const [sharePass, setSharePass] = useState('');
   const [shareExpiry, setShareExpiry] = useState('0'); // hours
   const [generatedShareToken, setGeneratedShareToken] = useState('');
+  const [generatedEmbedLink, setGeneratedEmbedLink] = useState('');
 
   // API Key State
   const [apiKeys, setApiKeys] = useState([]);
@@ -309,6 +310,7 @@ export default function App() {
     setSharePass('');
     setShareExpiry('0');
     setGeneratedShareToken('');
+    setGeneratedEmbedLink('');
     setIsShareModalOpen(true);
   };
 
@@ -322,7 +324,9 @@ export default function App() {
       });
       const token = res.data.token;
       const shareUrl = `${window.location.origin}${window.location.pathname}?share=${token}`;
+      const embedUrl = `${API_URL}/shares/view/${token}`;
       setGeneratedShareToken(shareUrl);
+      setGeneratedEmbedLink(embedUrl);
       addToast('Enlace de compartición generado');
     } catch (err) {
       addToast('Error al compartir archivo', 'error');
@@ -447,8 +451,32 @@ export default function App() {
 
   // Copy helper
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    addToast('Copiado al portapapeles');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => addToast('Copiado al portapapeles'))
+        .catch(() => addToast('Error al copiar al portapapeles', 'error'));
+    } else {
+      // Fallback for insecure HTTP contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.position = 'fixed';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          addToast('Copiado al portapapeles');
+        } else {
+          addToast('Error al copiar al portapapeles', 'error');
+        }
+      } catch (err) {
+        addToast('Error al copiar al portapapeles', 'error');
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   // Size helper
@@ -1335,19 +1363,39 @@ axios.post('${API_URL}/files/upload-request', {
               </form>
             ) : (
               <div className="space-y-4">
-                <p className="text-xs text-slate-400">Comparte esta URL con quien desees descargar el archivo:</p>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    readOnly 
-                    value={generatedShareToken}
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-teal-400 focus:outline-none"
-                  />
-                  <button onClick={() => copyToClipboard(generatedShareToken)} className="btn-secondary text-xs shrink-0 p-2">
-                    <Copy className="h-4 w-4" />
-                  </button>
+                <div className="space-y-1">
+                  <p className="text-[11px] text-slate-400 font-semibold">Página de Descarga (Pública):</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={generatedShareToken}
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-teal-400 focus:outline-none"
+                    />
+                    <button onClick={() => copyToClipboard(generatedShareToken)} className="btn-secondary text-xs shrink-0 p-2" title="Copiar enlace">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => setIsShareModalOpen(false)} className="btn-primary w-full justify-center text-xs py-2">Listo</button>
+
+                {!sharePass && (
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-slate-400 font-semibold">Enlace Directo (para incrustar en web/logo):</p>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={generatedEmbedLink}
+                        className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-teal-400 focus:outline-none"
+                      />
+                      <button onClick={() => copyToClipboard(generatedEmbedLink)} className="btn-secondary text-xs shrink-0 p-2" title="Copiar enlace directo">
+                        <Copy className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                <button onClick={() => setIsShareModalOpen(false)} className="btn-primary w-full justify-center text-xs py-2 mt-2">Listo</button>
               </div>
             )}
           </div>

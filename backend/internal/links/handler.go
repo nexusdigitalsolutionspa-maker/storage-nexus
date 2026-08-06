@@ -1,6 +1,7 @@
 package links
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -226,4 +228,50 @@ func RevokeShareLink(c *fiber.Ctx) error {
 	db.LogActivity(&claims.UserID, "LINK_REVOKE", c.IP(), fmt.Sprintf("Revoked shared link for token: %s", link.Token))
 
 	return c.JSON(fiber.Map{"message": "Share link revoked successfully"})
+}
+
+// ViewSharedFile streams the shared file directly to the browser for inline viewing/embedding (e.g., logo, image, PDF preview)
+func ViewSharedFile(c *fiber.Ctx) error {
+	token := c.Params("token")
+
+	var shareLink models.ShareLink
+	if err := db.DB.Preload("File").Where("token = ?", token).First(&shareLink).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Shared link not found"})
+	}
+
+	if shareLink.ExpiresAt != nil && shareLink.ExpiresAt.Before(time.Now()) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Shared link has expired"})
+	}
+
+	if shareLink.File.ScanStatus == "infected" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "File blocked due to safety violations."})
+	}
+
+	// If the link has a password, direct view is blocked
+	if shareLink.PasswordHash != "" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Password protected files cannot be viewed directly."})
+	}
+
+	// Fetch from MinIO
+	ctx := context.Background()
+	object, err := storage.MinioClient.GetObject(ctx, storage.BucketName, shareLink.File.StorageKey, minio.GetObjectOptions{})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve file from storage"})
+	}
+	defer object.Close()
+
+	// Get object info for content length
+	info, err := object.Stat()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read file metadata"})
+	}
+
+	// Set content headers for inline viewing
+	c.Set("Content-Type", shareLink.File.MimeType)
+	c.Set("Content-Length", fmt.Sprintf("%d", info.Size))
+	c.Set("Content-Disposition", "inline")
+	c.Set("Cache-Control", "public, max-age=31536000") // Cache for performance since it's a shared resource
+
+	// Stream file to client
+	return c.SendStream(object)
 }
