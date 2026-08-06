@@ -40,7 +40,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-nexus_minio_admin_secret}
       # Configuración del Webhook para notificar subidas exitosas de vuelta a la API de Go
       MINIO_NOTIFY_WEBHOOK_ENABLE_primary: "on"
-      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://nexus-api:8080/api/v1/files/webhook"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://api:8080/api/v1/files/webhook"
       MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_primary: ${WEBHOOK_SECRET:-nexus_storage_webhook_verification_secret_99999}
       MINIO_NOTIFY_WEBHOOK_QUEUE_DIR_primary: "/data/.minio.sys/queue"
       MINIO_KMS_SECRET_KEY: "nexus-kms-key:dEoCh987gRe+MJsnqMpT46EIRmRCssT0scmxymWJ/Cw="
