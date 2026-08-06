@@ -1,7 +1,6 @@
 package links
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/minio/minio-go/v7"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -230,7 +228,7 @@ func RevokeShareLink(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Share link revoked successfully"})
 }
 
-// ViewSharedFile streams the shared file directly to the browser for inline viewing/embedding (e.g., logo, image, PDF preview)
+// ViewSharedFile redirects the browser to a temporary presigned view URL for inline rendering (e.g. logo, image, PDF preview)
 func ViewSharedFile(c *fiber.Ctx) error {
 	token := c.Params("token")
 
@@ -252,26 +250,12 @@ func ViewSharedFile(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Password protected files cannot be viewed directly."})
 	}
 
-	// Fetch from MinIO
-	ctx := context.Background()
-	object, err := storage.MinioClient.GetObject(ctx, storage.BucketName, shareLink.File.StorageKey, minio.GetObjectOptions{})
+	// Generate presigned view URL (15 minutes expiry)
+	previewURL, err := storage.GeneratePresignedViewURL(shareLink.File.StorageKey, 15*time.Minute)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve file from storage"})
-	}
-	defer object.Close()
-
-	// Get object info for content length
-	info, err := object.Stat()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read file metadata"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate view URL"})
 	}
 
-	// Set content headers for inline viewing
-	c.Set("Content-Type", shareLink.File.MimeType)
-	c.Set("Content-Length", fmt.Sprintf("%d", info.Size))
-	c.Set("Content-Disposition", "inline")
-	c.Set("Cache-Control", "public, max-age=31536000") // Cache for performance since it's a shared resource
-
-	// Stream file to client
-	return c.SendStream(object)
+	// Redirect to the presigned URL
+	return c.Redirect(previewURL.String(), fiber.StatusFound)
 }
