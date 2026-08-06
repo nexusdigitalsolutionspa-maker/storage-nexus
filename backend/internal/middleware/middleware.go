@@ -32,11 +32,19 @@ func InitRedis() {
 		DB:       0,
 	})
 
-	// Test connection
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// Test connection with retry loop
+	var err error
+	for i := 1; i <= 5; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		_, err = RedisClient.Ping(ctx).Result()
+		cancel()
+		if err == nil {
+			break
+		}
+		fmt.Printf("Failed to connect to Redis (attempt %d/5): %v. Retrying in 3 seconds...\n", i, err)
+		time.Sleep(3 * time.Second)
+	}
 
-	_, err := RedisClient.Ping(ctx).Result()
 	if err != nil {
 		logFatal(fmt.Sprintf("Could not connect to Redis: %v", err))
 	}
