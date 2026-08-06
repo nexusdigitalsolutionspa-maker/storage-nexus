@@ -22,8 +22,6 @@ services:
     container_name: nexus_redis
     restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
-    ports:
-      - "16379:6379"
     volumes:
       - redis_data:/data
 
