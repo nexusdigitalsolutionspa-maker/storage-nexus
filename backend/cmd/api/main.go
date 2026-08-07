@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -17,6 +20,20 @@ import (
 	"nexus-storage/backend/internal/middleware"
 	"nexus-storage/backend/internal/storage"
 )
+
+func normalizeOrigin(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
+		raw = "https://" + raw
+	}
+	if u, err := url.Parse(raw); err == nil && u.Scheme != "" && u.Host != "" {
+		return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	}
+	return raw
+}
 
 func main() {
 	log.Println("Starting Nexus Storage Backend API...")
@@ -41,16 +58,21 @@ func main() {
 	app.Use(recover.New())
 	app.Use(logger.New())
 
-	// Configure CORS explicitly (no "*" in production)
-	allowedOrigins := "http://localhost:5173,http://localhost:5174"
-	clientUrl := os.Getenv("CLIENT_FRONTEND_URL")
-	adminUrl := os.Getenv("ADMIN_FRONTEND_URL")
-	if clientUrl != "" && adminUrl != "" {
-		allowedOrigins = allowedOrigins + "," + clientUrl + "," + adminUrl
+	// Configure CORS explicitly with normalized origins
+	origins := []string{"http://localhost:5173", "http://localhost:5174"}
+	clientUrl := normalizeOrigin(os.Getenv("CLIENT_FRONTEND_URL"))
+	adminUrl := normalizeOrigin(os.Getenv("ADMIN_FRONTEND_URL"))
+
+	if clientUrl != "" {
+		origins = append(origins, clientUrl)
 	}
-	if os.Getenv("ENV") == "production" && clientUrl != "" && adminUrl != "" {
-		allowedOrigins = clientUrl + "," + adminUrl
+	if adminUrl != "" {
+		origins = append(origins, adminUrl)
 	}
+
+	allowedOrigins := strings.Join(origins, ",")
+	log.Printf("Configured CORS Allowed Origins: %s", allowedOrigins)
+
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-API-Key",
