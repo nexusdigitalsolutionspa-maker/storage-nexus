@@ -4,7 +4,7 @@ import {
   Trash2, Share2, Download, Eye, ExternalLink, RefreshCw, Copy, Check, 
   Lock, Calendar, ChevronRight, Search, FileText, Image as ImageIcon, 
   Video, Music, AlertTriangle, User, HelpCircle, ArrowUpRight, ShieldCheck, 
-  X, CheckCircle, Info, ChevronDown, Menu, BookOpen
+  X, CheckCircle, Info, ChevronDown, Menu, BookOpen, Upload
 } from 'lucide-react';
 import axios from 'axios';
 import { 
