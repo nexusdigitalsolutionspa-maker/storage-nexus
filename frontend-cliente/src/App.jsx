@@ -718,7 +718,7 @@ export default function App() {
 
         <footer className="py-6 text-center text-slate-500 text-xs flex justify-center gap-4">
           <button onClick={() => setIsTermsOpen(true)} className="hover:text-slate-800 transition-all">Términos de servicio</button>
-          <button className="hover:text-slate-800 transition-all">Política de privacidad</button>
+          <button onClick={() => setIsTermsOpen(true)} className="hover:text-slate-800 transition-all">Política de privacidad</button>
         </footer>
 
         {/* Global Toasts */}
@@ -1395,17 +1395,62 @@ axios.post('${API_URL}/files/upload-request', {
 
         {/* Documentation View */}
         {view === 'docs' && (
-          <main className="p-8 flex-1 overflow-y-auto animate-fade-in max-w-4xl mx-auto w-full">
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">Documentación de la API</h1>
-            <p className="text-slate-500 mb-8">Guía completa para integrar Nexus Storage en tus aplicaciones.</p>
+          <main className="p-8 flex-1 overflow-y-auto animate-fade-in max-w-5xl mx-auto w-full">
+            <h1 className="text-3xl font-black text-slate-800 mb-3">Documentación de la API</h1>
+            <p className="text-slate-500 mb-10 text-lg">Guía paso a paso para integrar Nexus Storage en tus propias aplicaciones, scripts o automatizaciones.</p>
             
             {/* Section: Authentication */}
-            <section className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2"><Key className="h-5 w-5 text-blue-500" /> Autenticación</h2>
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
-                <p className="text-sm text-slate-600">Todas las peticiones requieren autenticación mediante una API Key. Puedes generar una desde la sección <strong>API Keys</strong>.</p>
-                <p className="text-sm text-slate-600">Envía tu clave en el header <code className="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono text-slate-800">X-API-Key</code> o como <code className="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono text-slate-800">Authorization: Bearer tu_key</code></p>
-                <p className="text-sm text-slate-500">Límite: <strong>60 peticiones por minuto</strong> por IP.</p>
+            <section className="mb-10">
+              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600"><Key className="h-5 w-5" /></div>
+                1. Autenticación
+              </h2>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5"><Key className="h-24 w-24" /></div>
+                <p className="text-sm text-slate-700 relative z-10">Para interactuar con la API, necesitas crear una <strong>API Key</strong> en el panel lateral de "API Keys".</p>
+                <div className="bg-white border border-slate-200 rounded-lg p-4 relative z-10">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">¿Cómo enviarla en tus peticiones?</p>
+                  <p className="text-sm text-slate-600 mb-2">Debes incluir la clave en las cabeceras (headers) de cada petición HTTP de cualquiera de estas dos formas:</p>
+                  <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 font-mono">
+                    <li><code className="bg-slate-100 text-blue-600 px-1.5 py-0.5 rounded">X-API-Key: tu_api_key_aqui</code> (Recomendado)</li>
+                    <li><code className="bg-slate-100 text-blue-600 px-1.5 py-0.5 rounded">Authorization: Bearer tu_api_key_aqui</code></li>
+                  </ul>
+                </div>
+                <p className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg inline-block font-medium relative z-10">
+                  ⚠️ Límite de seguridad: Máximo 60 peticiones por minuto por IP.
+                </p>
+              </div>
+            </section>
+
+            {/* Section: How to Upload */}
+            <section className="mb-10">
+              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <div className="p-2 bg-green-100 rounded-lg text-green-600"><Upload className="h-5 w-5" /></div>
+                2. El Flujo de Subida (Upload Flow)
+              </h2>
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <p className="text-sm text-slate-600 mb-6">Nexus Storage utiliza una arquitectura de "subida directa" (Direct Upload). Esto significa que tu aplicación no sube el archivo a nuestro backend central, sino que lo envía <strong>directamente a los servidores de almacenamiento (MinIO)</strong>. Esto garantiza la máxima velocidad y no satura la API.</p>
+                
+                <div className="grid md:grid-cols-2 gap-6 relative">
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">1</div>
+                      <div>
+                        <h4 className="font-semibold text-slate-800">Solicitar URL Prefirmada</h4>
+                        <p className="text-xs text-slate-500 mt-1">Tu aplicación le dice a la API: <em>"Quiero subir una foto de 2MB"</em>. La API registra el archivo y te responde con una URL secreta temporal.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">2</div>
+                      <div>
+                        <h4 className="font-semibold text-slate-800">Subir el archivo</h4>
+                        <p className="text-xs text-slate-500 mt-1">Tu aplicación hace una petición <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-mono">PUT</code> directa a esa URL temporal, adjuntando el archivo binario real.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
 
