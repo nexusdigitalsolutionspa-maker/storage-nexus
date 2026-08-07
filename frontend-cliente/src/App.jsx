@@ -202,9 +202,15 @@ export default function App() {
 
       const { presigned_url, file_id } = res.data;
 
+      // Ensure protocol matches current page to avoid Mixed Content blocking (HTTP upload on HTTPS site)
+      let uploadUrl = presigned_url;
+      if (window.location.protocol === 'https:' && uploadUrl.startsWith('http:')) {
+        uploadUrl = uploadUrl.replace('http:', 'https:');
+      }
+
       // 2. Perform direct PUT to MinIO with progress listener
       setUploadProgress({ filename: file.name, progress: 15 });
-      await axios.put(presigned_url, file, {
+      await axios.put(uploadUrl, file, {
         headers: {
           'Content-Type': file.type || 'application/octet-stream'
         },
