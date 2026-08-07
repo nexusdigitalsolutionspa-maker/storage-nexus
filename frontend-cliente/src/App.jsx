@@ -4,7 +4,7 @@ import {
   Trash2, Share2, Download, Eye, ExternalLink, RefreshCw, Copy, Check, 
   Lock, Calendar, ChevronRight, Search, FileText, Image as ImageIcon, 
   Video, Music, AlertTriangle, User, HelpCircle, ArrowUpRight, ShieldCheck, 
-  X, CheckCircle, Info, ChevronDown, Menu
+  X, CheckCircle, Info, ChevronDown, Menu, BookOpen
 } from 'lucide-react';
 import axios from 'axios';
 import { 
@@ -36,7 +36,7 @@ export default function App() {
   // Navigation & Auth
   const [token, setToken] = useState(localStorage.getItem('nexus_token'));
   const [user, setUser] = useState(null);
-  const [view, setView] = useState('dashboard'); // dashboard | files | api | history
+  const [view, setView] = useState('dashboard'); // dashboard | files | api | history | docs
   const [loading, setLoading] = useState(false);
   const [authView, setAuthView] = useState('login'); // login | register
 
@@ -80,6 +80,7 @@ export default function App() {
   const [shareExpiry, setShareExpiry] = useState('0'); // hours
   const [generatedShareToken, setGeneratedShareToken] = useState('');
   const [generatedEmbedLink, setGeneratedEmbedLink] = useState('');
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
 
   // API Key State
   const [apiKeys, setApiKeys] = useState([]);
@@ -526,40 +527,40 @@ export default function App() {
     { name: 'Usado', value: profileStats.storage_used },
     { name: 'Libre', value: Math.max(0, profileStats.plan.storage_limit_bytes - profileStats.storage_used) }
   ];
-  const COLORS = ['#14b8a6', '#1e293b'];
+  const COLORS = ['#3b82f6', '#e2e8f0'];
 
   // Public Share Landing view render
   if (shareToken) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-teal-500 selection:text-white">
-        <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between selection:bg-blue-100 selection:text-blue-800">
+        <header className="border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Nexus Storage Logo" className="h-16 w-16 object-contain" />
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">NEXUS STORAGE</span>
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">NEXUS STORAGE</span>
           </div>
-          <a href="/" className="text-slate-400 hover:text-teal-400 text-sm font-medium transition-all">Acceder a mi panel</a>
+          <a href="/" className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-all">Acceder a mi panel</a>
         </header>
 
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full glass-panel rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-blue-600"></div>
 
             {loading ? (
-              <div className="py-12 flex flex-col items-center gap-3 text-slate-400">
-                <RefreshCw className="animate-spin text-teal-400 h-8 w-8" />
+              <div className="py-12 flex flex-col items-center gap-3 text-slate-500">
+                <RefreshCw className="animate-spin text-blue-600 h-8 w-8" />
                 <p>Cargando información del archivo...</p>
               </div>
             ) : sharedError ? (
               <div className="text-center py-6">
-                <AlertTriangle className="text-rose-500 h-16 w-16 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-slate-100 mb-2">Enlace no disponible</h2>
-                <p className="text-slate-400 text-sm mb-6">{sharedError}</p>
-                <a href="/" className="btn-primary w-full justify-center">Ir al sitio principal</a>
+                <AlertTriangle className="text-red-600 h-16 w-16 mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-slate-800 mb-2">Enlace no disponible</h2>
+                <p className="text-slate-500 text-sm mb-6">{sharedError}</p>
+                <a href="/" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 w-full inline-flex justify-center font-medium transition-all">Ir al sitio principal</a>
               </div>
             ) : sharedFileInfo ? (
               <div>
                 <div className="flex justify-center mb-6">
-                  <div className="h-16 w-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+                  <div className="h-16 w-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
                     {sharedFileInfo.mime_type.startsWith('image/') ? (
                       <ImageIcon className="h-8 w-8" />
                     ) : sharedFileInfo.mime_type.startsWith('video/') ? (
@@ -570,34 +571,34 @@ export default function App() {
                   </div>
                 </div>
 
-                <h2 className="text-xl font-bold text-center text-slate-100 mb-1 truncate">{sharedFileInfo.name}</h2>
-                <p className="text-slate-400 text-sm text-center mb-6">{formatBytes(sharedFileInfo.size_bytes)} • {sharedFileInfo.mime_type}</p>
+                <h2 className="text-xl font-bold text-center text-slate-800 mb-1 truncate">{sharedFileInfo.name}</h2>
+                <p className="text-slate-500 text-sm text-center mb-6">{formatBytes(sharedFileInfo.size_bytes)} • {sharedFileInfo.mime_type}</p>
 
                 <form onSubmit={handleDownloadSharedFile} className="space-y-4">
                   {sharedFileInfo.requires_pwd && (
                     <div className="space-y-2">
-                      <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Este enlace requiere contraseña</label>
+                      <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Este enlace requiere contraseña</label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                         <input 
                           type="password" 
                           required 
                           value={sharedPasswordInput}
                           onChange={(e) => setSharedPasswordInput(e.target.value)}
                           placeholder="Introduce la contraseña" 
-                          className="w-full bg-slate-950/80 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 outline-none focus:border-teal-500 text-white transition-all text-sm"
+                          className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 outline-none focus:border-blue-500 text-slate-800 transition-all text-sm"
                         />
                       </div>
                     </div>
                   )}
 
-                  <button type="submit" className="btn-primary w-full py-3 text-base justify-center">
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg w-full py-3 text-base flex justify-center items-center gap-2 transition-all">
                     <Download className="h-5 w-5" /> Descargar Archivo
                   </button>
                 </form>
 
                 {sharedFileInfo.expires_at && (
-                  <p className="text-xs text-slate-500 text-center mt-6">
+                  <p className="text-xs text-slate-400 text-center mt-6">
                     Expira el: {new Date(sharedFileInfo.expires_at).toLocaleString()}
                   </p>
                 )}
@@ -606,7 +607,7 @@ export default function App() {
           </div>
         </main>
 
-        <footer className="border-t border-slate-900 py-6 text-center text-slate-600 text-xs">
+        <footer className="border-t border-slate-200 py-6 text-center text-slate-500 text-xs">
           Nexus Storage © {new Date().getFullYear()} — Desarrollado por Nexus Digital Solutions.
         </footer>
 
@@ -614,11 +615,11 @@ export default function App() {
         <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
           {toasts.map(t => (
             <div key={t.id} className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border shadow-lg text-sm transition-all duration-300 animate-slide-in ${
-              t.type === 'error' ? 'bg-rose-950/80 border-rose-800 text-rose-200' :
-              t.type === 'info' ? 'bg-slate-900 border-slate-800 text-slate-200' :
-              'bg-teal-950/80 border-teal-800 text-teal-200'
+              t.type === 'error' ? 'bg-white border-red-200 text-red-700' :
+              t.type === 'info' ? 'bg-white border-blue-200 text-blue-700' :
+              'bg-white border-green-200 text-green-700'
             }`}>
-              {t.type === 'error' ? <AlertTriangle className="h-4 w-4 text-rose-400" /> : <CheckCircle className="h-4 w-4 text-teal-400" />}
+              {t.type === 'error' ? <AlertTriangle className="h-4 w-4 text-red-600" /> : <CheckCircle className="h-4 w-4 text-green-600" />}
               <span>{t.message}</span>
             </div>
           ))}
@@ -630,59 +631,59 @@ export default function App() {
   // Auth screen if not logged in
   if (!token) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-teal-500 selection:text-white">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between selection:bg-blue-100 selection:text-blue-800">
         <header className="px-6 py-4 flex justify-between items-center max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Nexus Storage Logo" className="h-16 w-16 object-contain" />
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">NEXUS STORAGE</span>
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">NEXUS STORAGE</span>
           </div>
         </header>
 
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full glass-panel rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
-
+          <div className="max-w-sm w-full bg-white border border-slate-200 rounded-2xl shadow-lg p-8 relative overflow-hidden">
+            <img src="/logo.png" alt="Nexus Storage Logo" className="h-16 w-16 mx-auto mb-4 object-contain" />
+            
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-black text-white">
-                {authView === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+              <h2 className="text-2xl font-normal text-slate-800">
+                {authView === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
               </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                {authView === 'login' ? 'Accede a tu almacenamiento Nexus' : 'Regístrate y obtén 5GB gratis al instante'}
+              <p className="text-sm text-slate-500 mt-1">
+                {authView === 'login' ? 'Usa tu cuenta de Nexus Storage' : 'Regístrate y obtén 5GB gratis al instante'}
               </p>
             </div>
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               {authView === 'register' && (
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Nombre Completo</label>
+                  <label className="text-xs text-slate-600 font-medium block">Nombre Completo</label>
                   <input 
                     type="text" 
                     required 
                     value={authForm.name}
                     onChange={(e) => setAuthForm({...authForm, name: e.target.value})}
                     placeholder="Juan Pérez" 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:border-teal-500 outline-none text-white transition-all"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 outline-none text-slate-800 transition-all"
                   />
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Correo Electrónico</label>
+                <label className="text-xs text-slate-600 font-medium block">Correo Electrónico</label>
                 <input 
                   type="email" 
                   required 
                   value={authForm.email}
                   onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
                   placeholder="tu@email.com" 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:border-teal-500 outline-none text-white transition-all"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 outline-none text-slate-800 transition-all"
                 />
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Contraseña</label>
+                  <label className="text-xs text-slate-600 font-medium block">Contraseña</label>
                   {authView === 'login' && (
-                    <button type="button" onClick={() => addToast('Ponte en contacto con soporte para recuperar tu clave.', 'info')} className="text-xs text-teal-400 hover:text-teal-300">¿La olvidaste?</button>
+                    <button type="button" onClick={() => addToast('Ponte en contacto con soporte para recuperar tu clave.', 'info')} className="text-xs text-blue-600 hover:text-blue-700">¿La olvidaste?</button>
                   )}
                 </div>
                 <input 
@@ -691,47 +692,91 @@ export default function App() {
                   value={authForm.password}
                   onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
                   placeholder="••••••••" 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:border-teal-500 outline-none text-white transition-all"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 outline-none text-slate-800 transition-all"
                 />
               </div>
 
-              <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-sm justify-center mt-2">
+              <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full py-2.5 text-sm font-medium flex justify-center items-center mt-2 transition-all">
                 {loading ? <RefreshCw className="animate-spin h-4 w-4" /> : authView === 'login' ? 'Iniciar Sesión' : 'Registrarse'}
               </button>
             </form>
 
-            <div className="text-center mt-6 pt-4 border-t border-slate-900/60">
-              <p className="text-sm text-slate-400">
+            <div className="text-center mt-6 pt-4 border-t border-slate-100">
+              <p className="text-sm text-slate-500">
                 {authView === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
                 <button 
                   type="button" 
                   onClick={() => setAuthView(authView === 'login' ? 'register' : 'login')}
-                  className="text-teal-400 hover:text-teal-300 font-semibold ml-1.5 focus:outline-none"
+                  className="text-blue-600 hover:text-blue-700 font-medium ml-1.5 focus:outline-none"
                 >
-                  {authView === 'login' ? 'Regístrate aquí' : 'Inicia sesión'}
+                  {authView === 'login' ? 'Crear cuenta' : 'Iniciar sesión'}
                 </button>
               </p>
             </div>
           </div>
         </main>
 
-        <footer className="border-t border-slate-900 py-6 text-center text-slate-600 text-xs">
-          Nexus Storage © {new Date().getFullYear()} — Desarrollado por Nexus Digital Solutions.
+        <footer className="py-6 text-center text-slate-500 text-xs flex justify-center gap-4">
+          <button onClick={() => setIsTermsOpen(true)} className="hover:text-slate-800 transition-all">Términos de servicio</button>
+          <button className="hover:text-slate-800 transition-all">Política de privacidad</button>
         </footer>
 
         {/* Global Toasts */}
         <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
           {toasts.map(t => (
             <div key={t.id} className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border shadow-lg text-sm transition-all duration-300 animate-slide-in ${
-              t.type === 'error' ? 'bg-rose-950/80 border-rose-800 text-rose-200' :
-              t.type === 'info' ? 'bg-slate-900 border-slate-800 text-slate-200' :
-              'bg-teal-950/80 border-teal-800 text-teal-200'
+              t.type === 'error' ? 'bg-white border-red-200 text-red-700' :
+              t.type === 'info' ? 'bg-white border-blue-200 text-blue-700' :
+              'bg-white border-green-200 text-green-700'
             }`}>
-              {t.type === 'error' ? <AlertTriangle className="h-4 w-4 text-rose-400" /> : <CheckCircle className="h-4 w-4 text-teal-400" />}
+              {t.type === 'error' ? <AlertTriangle className="h-4 w-4 text-red-600" /> : <CheckCircle className="h-4 w-4 text-green-600" />}
               <span>{t.message}</span>
             </div>
           ))}
         </div>
+
+        {/* Terms of Service Modal */}
+        {isTermsOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="max-w-2xl w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-xl relative max-h-[90vh] flex flex-col">
+              <div className="flex justify-between items-center mb-6 shrink-0">
+                <h3 className="text-xl font-semibold text-slate-800">Términos de Servicio — Nexus Storage</h3>
+                <button onClick={() => setIsTermsOpen(false)} className="text-slate-500 hover:text-slate-800 transition-all">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="overflow-y-auto pr-2 space-y-4 text-sm text-slate-600">
+                <section>
+                  <h4 className="font-semibold text-slate-800 mb-1">Propiedad de Archivos</h4>
+                  <p>El usuario es el único propietario de los archivos subidos.</p>
+                </section>
+                <section>
+                  <h4 className="font-semibold text-slate-800 mb-1">Uso Aceptable</h4>
+                  <p>Queda prohibido subir contenido ilegal, malware, o material que viole derechos de autor.</p>
+                </section>
+                <section>
+                  <h4 className="font-semibold text-slate-800 mb-1">Escaneo de Seguridad</h4>
+                  <p>Todos los archivos son escaneados automáticamente por antivirus.</p>
+                </section>
+                <section>
+                  <h4 className="font-semibold text-slate-800 mb-1">Enlaces Compartidos</h4>
+                  <p>Los enlaces públicos son responsabilidad del usuario.</p>
+                </section>
+                <section>
+                  <h4 className="font-semibold text-slate-800 mb-1">Almacenamiento</h4>
+                  <p>El espacio está sujeto al plan contratado.</p>
+                </section>
+                <section>
+                  <h4 className="font-semibold text-slate-800 mb-1">Privacidad</h4>
+                  <p>Nexus Storage no accede al contenido de los archivos del usuario.</p>
+                </section>
+              </div>
+              <div className="mt-8 pt-4 border-t border-slate-200 flex justify-end shrink-0">
+                <button onClick={() => setIsTermsOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2 text-sm font-medium transition-all">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -743,38 +788,38 @@ export default function App() {
 
   // Dashboard Main View layout
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex selection:bg-blue-100 selection:text-blue-800">
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src="/logo.png" className="h-8" alt="Nexus" />
-          <span className="text-sm font-bold text-white tracking-wider">NEXUS STORAGE</span>
+          <span className="text-sm font-bold text-slate-800 tracking-wider">NEXUS STORAGE</span>
         </div>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-400 hover:text-white">
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-500 hover:text-slate-800">
           <Menu className="h-6 w-6" />
         </button>
       </div>
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar navigation */}
-      <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 z-50 md:z-auto transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} border-r border-slate-900 bg-slate-950 flex flex-col justify-between shrink-0`}>
+      <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 z-50 md:z-auto transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} border-r border-slate-200 bg-white flex flex-col justify-between shrink-0`}>
         <div className="flex flex-col">
           {/* Logo */}
-          <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-900">
+          <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-200 bg-white">
             <img src="/logo.png" alt="Nexus Storage Logo" className="h-12 w-12 object-contain" />
-            <span className="font-extrabold tracking-tight text-white">NEXUS STORAGE</span>
+            <span className="font-extrabold tracking-tight text-slate-800">NEXUS STORAGE</span>
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1 bg-white">
             <button 
               onClick={() => { setView('dashboard'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                view === 'dashboard' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
+                view === 'dashboard' ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-500' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
               }`}
             >
               <HardDrive className="h-4 w-4" /> Dashboard
@@ -782,7 +827,7 @@ export default function App() {
             <button 
               onClick={() => { setView('files'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                view === 'files' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
+                view === 'files' ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-500' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
               }`}
             >
               <Folder className="h-4 w-4" /> Mis Archivos
@@ -790,7 +835,7 @@ export default function App() {
             <button 
               onClick={() => { setView('api'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                view === 'api' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
+                view === 'api' ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-500' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
               }`}
             >
               <Key className="h-4 w-4" /> Mi API
@@ -798,28 +843,36 @@ export default function App() {
             <button 
               onClick={() => { setView('history'); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                view === 'history' ? 'bg-teal-500/10 text-teal-400 border-l-2 border-teal-500' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
+                view === 'history' ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-500' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
               }`}
             >
               <History className="h-4 w-4" /> Actividad
+            </button>
+            <button 
+              onClick={() => { setView('docs'); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                view === 'docs' ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-500' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+              }`}
+            >
+              <BookOpen className="h-4 w-4" /> Documentación
             </button>
           </nav>
         </div>
 
         {/* User profile card & Logout */}
-        <div className="p-4 border-t border-slate-900 space-y-4">
+        <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-4">
           {user && (
             <div className="flex items-center gap-3 px-2">
-              <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-teal-400 font-bold border border-slate-700/50">
+              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-blue-600 font-bold border border-slate-300">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+                <p className="text-sm font-semibold text-slate-700 truncate">{user.name}</p>
                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
               </div>
             </div>
           )}
-          <button onClick={logOut} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-950/20 transition-all border border-transparent hover:border-rose-900/30">
+          <button onClick={logOut} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-200">
             <LogOut className="h-4 w-4" /> Cerrar Sesión
           </button>
         </div>
@@ -829,16 +882,16 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen pt-16 md:pt-0">
         {/* Upload status floating bar */}
         {uploadProgress && (
-          <div className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex justify-between items-center gap-4 animate-pulse">
-            <div className="flex items-center gap-3 text-sm text-slate-300 min-w-0">
-              <RefreshCw className="animate-spin text-teal-400 h-4 w-4 shrink-0" />
+          <div className="bg-blue-50 border-b border-blue-100 px-6 py-3 flex justify-between items-center gap-4 animate-pulse">
+            <div className="flex items-center gap-3 text-sm text-blue-700 min-w-0">
+              <RefreshCw className="animate-spin text-blue-500 h-4 w-4 shrink-0" />
               <span className="truncate">Subiendo: <strong>{uploadProgress.filename}</strong></span>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <div className="w-48 bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                <div className="bg-teal-500 h-full transition-all duration-200" style={{ width: `${uploadProgress.progress}%` }}></div>
+              <div className="w-48 bg-white rounded-full h-2 overflow-hidden border border-blue-200">
+                <div className="bg-blue-500 h-full transition-all duration-200" style={{ width: `${uploadProgress.progress}%` }}></div>
               </div>
-              <span className="text-xs text-slate-400 font-semibold">{uploadProgress.progress}%</span>
+              <span className="text-xs text-blue-700 font-semibold">{uploadProgress.progress}%</span>
             </div>
           </div>
         )}
@@ -848,82 +901,88 @@ export default function App() {
           <main className="p-8 space-y-8 flex-1">
             {/* Header */}
             <div>
-              <h1 className="text-2xl font-black text-white">Hola, {user?.name || 'Cliente'}</h1>
-              <p className="text-slate-400 text-sm">Gestiona tus archivos y cuotas de Nexus Storage de forma segura.</p>
+              <h1 className="text-2xl font-black text-slate-800">Hola, {user?.name || 'Cliente'}</h1>
+              <p className="text-slate-500 text-sm">Gestiona tus archivos y cuotas de Nexus Storage de forma segura.</p>
             </div>
 
             {/* Metrics cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36">
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Espacio Contratado</span>
-                  <HardDrive className="text-teal-400 h-5 w-5" />
+                  <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Espacio Contratado</span>
+                  <HardDrive className="text-blue-500 h-5 w-5" />
                 </div>
                 <div className="mt-2">
-                  <p className="text-2xl font-black text-white">{formatBytes(profileStats.plan.storage_limit_bytes)}</p>
+                  <p className="text-2xl font-black text-slate-800">{formatBytes(profileStats.plan.storage_limit_bytes)}</p>
                   <p className="text-xs text-slate-500 mt-1">Plan {profileStats.plan.name}</p>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36">
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Espacio Utilizado</span>
-                  <HardDrive className="text-teal-400 h-5 w-5" />
+                  <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Espacio Utilizado</span>
+                  <HardDrive className="text-blue-500 h-5 w-5" />
                 </div>
                 <div className="mt-2">
-                  <p className="text-2xl font-black text-white">{formatBytes(profileStats.storage_used)}</p>
+                  <p className="text-2xl font-black text-slate-800">{formatBytes(profileStats.storage_used)}</p>
                   <p className="text-xs text-slate-500 mt-1">{(spaceUsedPercent * 100).toFixed(1)}% utilizado</p>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36">
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Cantidad de Archivos</span>
-                  <FileIcon className="text-teal-400 h-5 w-5" />
+                  <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Cantidad de Archivos</span>
+                  <FileIcon className="text-blue-500 h-5 w-5" />
                 </div>
                 <div className="mt-2">
-                  <p className="text-2xl font-black text-white">{profileStats.file_count}</p>
+                  <p className="text-2xl font-black text-slate-800">{profileStats.file_count}</p>
                   <p className="text-xs text-slate-500 mt-1">En {profileStats.folder_count} carpetas</p>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36">
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36 shadow-sm">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Transferencia</span>
-                  <ArrowUpRight className="text-teal-400 h-5 w-5" />
+                  <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Estado del Plan</span>
+                  <ArrowUpRight className="text-blue-500 h-5 w-5" />
                 </div>
                 <div className="mt-2">
-                  <p className="text-2xl font-black text-white">4.8 GB</p>
-                  <p className="text-xs text-slate-500 mt-1">Consumo mensual</p>
+                  <p className="text-2xl font-black text-slate-800">{profileStats.plan.name}</p>
+                  <p className="text-xs mt-1"><span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">Activo</span></p>
                 </div>
               </div>
             </div>
 
             {/* Graphs Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="glass-panel p-6 rounded-2xl lg:col-span-2">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-6">Actividad de Descarga y Subida</h3>
+              <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl lg:col-span-2 relative">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6">Actividad de Descarga y Subida</h3>
+                <span className="absolute top-6 right-6 bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-md opacity-80">Datos de ejemplo</span>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={activityData}>
                       <defs>
                         <linearGradient id="colorDescarga" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#14b8a6" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorSubida" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.2}/>
+                          <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                       <YAxis stroke="#64748b" fontSize={11} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
-                      <Area type="monotone" dataKey="Descargas" stroke="#14b8a6" fillOpacity={1} fill="url(#colorDescarga)" />
+                      <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', color: '#1e293b' }} />
+                      <Area type="monotone" dataKey="Descargas" stroke="#3b82f6" fillOpacity={1} fill="url(#colorDescarga)" />
+                      <Area type="monotone" dataKey="Subidas" stroke="#94a3b8" fillOpacity={1} fill="url(#colorSubida)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 self-start">Distribución de Almacenamiento</h3>
+              <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl flex flex-col items-center justify-center">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 self-start">Distribución de Almacenamiento</h3>
                 <div className="h-44 w-44 relative flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -943,35 +1002,35 @@ export default function App() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute text-center">
-                    <span className="text-2xl font-black text-white">{(spaceUsedPercent * 100).toFixed(0)}%</span>
+                    <span className="text-2xl font-black text-slate-800">{(spaceUsedPercent * 100).toFixed(0)}%</span>
                     <p className="text-[10px] text-slate-500 font-semibold uppercase">Lleno</p>
                   </div>
                 </div>
                 <div className="flex gap-6 mt-4 text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-teal-500"></div>
-                    <span className="text-slate-300">Usado ({formatBytes(profileStats.storage_used)})</span>
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-slate-600">Usado ({formatBytes(profileStats.storage_used)})</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-slate-800"></div>
-                    <span className="text-slate-300">Libre</span>
+                    <div className="w-3 h-3 rounded-full bg-slate-200"></div>
+                    <span className="text-slate-600">Libre</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Quick API Snippet */}
-            <div className="glass-panel p-6 rounded-2xl flex justify-between items-center">
+            <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl flex justify-between items-center">
               <div className="flex gap-4 items-center">
-                <div className="bg-teal-500/10 p-3 rounded-xl border border-teal-500/20 text-teal-400">
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-600">
                   <Cpu className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-base">Integra tus sistemas</h3>
-                  <p className="text-xs text-slate-400">Crea credenciales API y sube archivos de forma programática a Nexus Storage.</p>
+                  <h3 className="font-bold text-slate-800 text-base">Integra tus sistemas</h3>
+                  <p className="text-xs text-slate-500">Crea credenciales API y sube archivos de forma programática a Nexus Storage.</p>
                 </div>
               </div>
-              <button onClick={() => setView('api')} className="btn-secondary text-xs">Generar API Key</button>
+              <button onClick={() => setView('api')} className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium px-4 py-2 rounded-lg text-xs transition-all">Generar API Key</button>
             </div>
           </main>
         )}
@@ -982,14 +1041,14 @@ export default function App() {
             {/* Header controls */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
               <div>
-                <h1 className="text-2xl font-black text-white">Mis Archivos</h1>
+                <h1 className="text-2xl font-black text-slate-800">Mis Archivos</h1>
                 {/* Breadcrumbs */}
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
-                  <button onClick={() => setCurrentFolderId('root')} className="hover:text-teal-400 transition-all">Raíz</button>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                  <button onClick={() => setCurrentFolderId('root')} className="hover:text-blue-600 transition-all">Raíz</button>
                   {breadcrumbs.map((b) => (
                     <React.Fragment key={b.id}>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-600" />
-                      <button onClick={() => setCurrentFolderId(b.id)} className="hover:text-teal-400 transition-all truncate max-w-[120px]">{b.name}</button>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                      <button onClick={() => setCurrentFolderId(b.id)} className="hover:text-blue-600 transition-all truncate max-w-[120px]">{b.name}</button>
                     </React.Fragment>
                   ))}
                 </div>
@@ -998,21 +1057,21 @@ export default function App() {
               {/* Actions panel */}
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <input 
                     type="text" 
                     placeholder="Buscar archivos..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 text-xs rounded-lg pl-9 pr-4 py-2 outline-none focus:border-teal-500 w-48 text-white transition-all"
+                    className="bg-white border border-slate-200 text-xs rounded-lg pl-9 pr-4 py-2 outline-none focus:border-blue-500 w-48 text-slate-800 transition-all shadow-sm"
                   />
                 </div>
 
-                <button onClick={() => setIsFolderModalOpen(true)} className="btn-secondary text-xs py-2">
+                <button onClick={() => setIsFolderModalOpen(true)} className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium px-4 py-2 rounded-lg text-xs flex items-center gap-2 transition-all">
                   <Plus className="h-4 w-4" /> Carpeta
                 </button>
 
-                <label className="btn-primary text-xs py-2 cursor-pointer">
+                <label className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-xs flex items-center gap-2 cursor-pointer transition-all shadow-sm">
                   <Plus className="h-4 w-4" /> Subir Archivo
                   <input type="file" onChange={handleUpload} className="hidden" />
                 </label>
@@ -1022,15 +1081,15 @@ export default function App() {
             {/* Layout with Files Grid and Preview panel */}
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Files table list */}
-              <div className="flex-1 glass-panel rounded-2xl overflow-y-auto p-6 min-w-0">
+              <div className="flex-1 bg-white border border-slate-200 rounded-2xl overflow-y-auto p-6 min-w-0 shadow-sm">
                 {loading ? (
-                  <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-400">
-                    <RefreshCw className="animate-spin text-teal-400 h-8 w-8" />
+                  <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-500">
+                    <RefreshCw className="animate-spin text-blue-500 h-8 w-8" />
                     <p className="text-sm">Cargando archivos...</p>
                   </div>
                 ) : files.length === 0 && folders.length === 0 ? (
-                  <div className="h-64 flex flex-col items-center justify-center gap-4 text-slate-500">
-                    <Folder className="h-16 w-16 text-slate-700" />
+                  <div className="h-64 flex flex-col items-center justify-center gap-4 text-slate-400">
+                    <Folder className="h-16 w-16 text-slate-300" />
                     <p className="text-sm font-medium">Esta carpeta está vacía. ¡Sube un archivo!</p>
                   </div>
                 ) : (
@@ -1044,15 +1103,15 @@ export default function App() {
                             <div 
                               key={f.id}
                               onDoubleClick={() => setCurrentFolderId(f.id)}
-                              className="bg-slate-950 hover:bg-slate-900 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between gap-3 group cursor-pointer transition-all duration-200"
+                              className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-3 group cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <Folder className="text-teal-400 h-5 w-5 shrink-0" />
-                                <span className="text-sm font-medium text-slate-200 truncate">{f.name}</span>
+                                <Folder className="text-blue-500 h-5 w-5 shrink-0" />
+                                <span className="text-sm font-medium text-slate-700 truncate">{f.name}</span>
                               </div>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleDeleteFolder(f.id); }}
-                                className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 p-1 hover:bg-slate-800 rounded transition-all"
+                                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 p-1 hover:bg-slate-100 rounded transition-all"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -1066,56 +1125,56 @@ export default function App() {
                     {files.length > 0 && (
                       <div className="space-y-3">
                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Archivos</h3>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-sm text-slate-300">
-                            <thead className="text-xs text-slate-500 uppercase border-b border-slate-800">
+                        <div className="overflow-x-auto border border-slate-200 rounded-xl overflow-hidden">
+                          <table className="w-full text-left text-sm text-slate-600">
+                            <thead className="text-xs text-slate-600 uppercase bg-slate-50 font-medium border-b border-slate-200">
                               <tr>
-                                <th className="pb-3">Nombre</th>
-                                <th className="pb-3">Tamaño</th>
-                                <th className="pb-3">Tipo</th>
-                                <th className="pb-3">Análisis</th>
-                                <th className="pb-3 text-right">Acciones</th>
+                                <th className="px-4 py-3">Nombre</th>
+                                <th className="px-4 py-3">Tamaño</th>
+                                <th className="px-4 py-3">Tipo</th>
+                                <th className="px-4 py-3">Análisis</th>
+                                <th className="px-4 py-3 text-right">Acciones</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-900">
+                            <tbody className="divide-y divide-slate-100 bg-white">
                               {files
                                 .filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
                                 .map(f => (
                                   <tr 
                                     key={f.id}
                                     onClick={() => handlePreviewFile(f)}
-                                    className={`hover:bg-slate-900/40 cursor-pointer ${previewFile?.id === f.id ? 'bg-slate-900/60' : ''}`}
+                                    className={`hover:bg-slate-50 cursor-pointer ${previewFile?.id === f.id ? 'bg-blue-50/50' : ''}`}
                                   >
-                                    <td className="py-3.5 flex items-center gap-3 min-w-0">
+                                    <td className="px-4 py-3.5 flex items-center gap-3 min-w-0">
                                       {f.mime_type.startsWith('image/') ? (
-                                        <ImageIcon className="text-teal-400 h-4.5 w-4.5 shrink-0" />
+                                        <ImageIcon className="text-blue-500 h-4.5 w-4.5 shrink-0" />
                                       ) : f.mime_type.startsWith('video/') ? (
-                                        <Video className="text-teal-400 h-4.5 w-4.5 shrink-0" />
+                                        <Video className="text-blue-500 h-4.5 w-4.5 shrink-0" />
                                       ) : (
                                         <FileIcon className="text-slate-400 h-4.5 w-4.5 shrink-0" />
                                       )}
-                                      <span className="font-medium text-slate-200 truncate max-w-[200px]">{f.name}</span>
+                                      <span className="font-medium text-slate-800 truncate max-w-[200px]">{f.name}</span>
                                     </td>
-                                    <td className="py-3.5 text-xs text-slate-400">{formatBytes(f.size_bytes || f.size)}</td>
-                                    <td className="py-3.5 text-xs text-slate-500 truncate max-w-[120px]">{f.mime_type}</td>
-                                    <td className="py-3.5 text-xs">
+                                    <td className="px-4 py-3.5 text-xs text-slate-500">{formatBytes(f.size_bytes || f.size)}</td>
+                                    <td className="px-4 py-3.5 text-xs text-slate-400 truncate max-w-[120px]">{f.mime_type}</td>
+                                    <td className="px-4 py-3.5 text-xs">
                                       {f.scan_status === 'pending' || f.scan_status === 'uploading' ? (
-                                        <span className="bg-amber-950/40 border border-amber-800/50 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-semibold animate-pulse">Escaneando...</span>
+                                        <span className="bg-amber-50 border border-amber-200 text-amber-600 text-[10px] px-2 py-0.5 rounded-full font-semibold animate-pulse">Escaneando...</span>
                                       ) : f.scan_status === 'clean' ? (
-                                        <span className="bg-emerald-950/40 border border-emerald-800/50 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 w-fit"><ShieldCheck className="h-3 w-3" /> Seguro</span>
+                                        <span className="bg-green-50 border border-green-200 text-green-600 text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 w-fit"><ShieldCheck className="h-3 w-3" /> Seguro</span>
                                       ) : (
-                                        <span className="bg-rose-950/40 border border-rose-800/50 text-rose-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">Infectado</span>
+                                        <span className="bg-red-50 border border-red-200 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">Infectado</span>
                                       )}
                                     </td>
-                                    <td className="py-3.5 text-right">
+                                    <td className="px-4 py-3.5 text-right">
                                       <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => handleDownloadFile(f)} disabled={f.scan_status === 'infected'} className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-teal-400 transition-all disabled:opacity-40" title="Descargar">
+                                        <button onClick={() => handleDownloadFile(f)} disabled={f.scan_status === 'infected'} className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-600 transition-all disabled:opacity-40" title="Descargar">
                                           <Download className="h-4 w-4" />
                                         </button>
-                                        <button onClick={() => handleOpenShare(f)} disabled={f.scan_status === 'infected'} className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-teal-400 transition-all disabled:opacity-40" title="Compartir">
+                                        <button onClick={() => handleOpenShare(f)} disabled={f.scan_status === 'infected'} className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-600 transition-all disabled:opacity-40" title="Compartir">
                                           <Share2 className="h-4 w-4" />
                                         </button>
-                                        <button onClick={() => handleDeleteFile(f.id)} className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-rose-400 transition-all" title="Eliminar">
+                                        <button onClick={() => handleDeleteFile(f.id)} className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-red-600 transition-all" title="Eliminar">
                                           <Trash2 className="h-4 w-4" />
                                         </button>
                                       </div>
@@ -1133,25 +1192,25 @@ export default function App() {
 
               {/* Preview Side Drawer */}
               {previewFile && (
-                <div className="w-80 glass-panel rounded-2xl p-6 flex flex-col justify-between shrink-0 animate-fade-in">
+                <div className="w-80 bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shrink-0 animate-fade-in shadow-sm">
                   <div className="space-y-6">
-                    <div className="flex justify-between items-center border-b border-slate-900 pb-3">
-                      <h3 className="font-bold text-white text-sm">Detalles del Archivo</h3>
-                      <button onClick={() => setPreviewFile(null)} className="text-slate-500 hover:text-slate-200">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                      <h3 className="font-bold text-slate-800 text-sm">Detalles del Archivo</h3>
+                      <button onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-600">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
 
                     {/* Preview visual wrapper */}
-                    <div className="h-40 bg-slate-950 rounded-xl border border-slate-900/60 overflow-hidden flex items-center justify-center relative">
+                    <div className="h-40 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center relative">
                       {previewUrl && previewFile.mime_type.startsWith('image/') ? (
                         <img src={previewUrl} alt={previewFile.name} className="w-full h-full object-cover" />
                       ) : previewUrl && previewFile.mime_type.startsWith('video/') ? (
                         <video src={previewUrl} controls className="w-full h-full object-cover" />
                       ) : (
-                        <div className="text-slate-600 flex flex-col items-center gap-2">
+                        <div className="text-slate-400 flex flex-col items-center gap-2">
                           <FileText className="h-12 w-12" />
-                          <span className="text-[10px] uppercase font-semibold">Previsualización no disponible</span>
+                          <span className="text-[10px] uppercase font-semibold text-slate-500">Previsualización no disponible</span>
                         </div>
                       )}
                     </div>
@@ -1159,21 +1218,21 @@ export default function App() {
                     <div className="space-y-3 text-xs">
                       <div>
                         <span className="text-slate-500 font-semibold block">Nombre</span>
-                        <span className="text-slate-200 break-all">{previewFile.name}</span>
+                        <span className="text-slate-800 break-all">{previewFile.name}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <span className="text-slate-500 font-semibold block">Tamaño</span>
-                          <span className="text-slate-200">{formatBytes(previewFile.size_bytes || previewFile.size)}</span>
+                          <span className="text-slate-800">{formatBytes(previewFile.size_bytes || previewFile.size)}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 font-semibold block">Descargas</span>
-                          <span className="text-slate-200">{previewFile.download_count}</span>
+                          <span className="text-slate-800">{previewFile.download_count}</span>
                         </div>
                       </div>
                       <div>
                         <span className="text-slate-500 font-semibold block">Tipo MIME</span>
-                        <span className="text-slate-200 truncate block">{previewFile.mime_type}</span>
+                        <span className="text-slate-800 truncate block">{previewFile.mime_type}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 font-semibold block">ID de Almacenamiento</span>
@@ -1185,7 +1244,7 @@ export default function App() {
                   <button 
                     onClick={() => handleDownloadFile(previewFile)} 
                     disabled={previewFile.scan_status === 'infected'}
-                    className="btn-primary w-full text-xs justify-center py-2.5 mt-6 disabled:opacity-40"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full text-xs flex justify-center items-center py-2.5 mt-6 disabled:opacity-40 transition-all font-medium gap-2"
                   >
                     <Download className="h-4 w-4" /> Descargar Archivo
                   </button>
@@ -1199,40 +1258,40 @@ export default function App() {
         {view === 'api' && (
           <main className="p-8 space-y-8 flex-1 overflow-y-auto">
             <div>
-              <h1 className="text-2xl font-black text-white">Mi API</h1>
-              <p className="text-slate-400 text-sm mt-1">Crea credenciales y accede a la documentación para desarrolladores.</p>
+              <h1 className="text-2xl font-black text-slate-800">Mi API</h1>
+              <p className="text-slate-500 text-sm mt-1">Crea credenciales y accede a la documentación para desarrolladores.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* API Keys List */}
-              <div className="glass-panel p-6 rounded-2xl lg:col-span-2 space-y-6">
+              <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl lg:col-span-2 space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-white text-base">Claves de API Activas</h3>
-                  <button onClick={() => { setGeneratedKeyRaw(''); setIsKeyModalOpen(true); }} className="btn-primary text-xs py-1.5">
+                  <h3 className="font-bold text-slate-800 text-base">Claves de API Activas</h3>
+                  <button onClick={() => { setGeneratedKeyRaw(''); setIsKeyModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs py-1.5 px-3 flex items-center gap-1.5 font-medium transition-all">
                     <Plus className="h-4 w-4" /> Nueva Clave
                   </button>
                 </div>
 
                 {apiKeys.length === 0 ? (
-                  <div className="py-12 text-center text-slate-500 text-sm">
+                  <div className="py-12 text-center text-slate-400 text-sm">
                     No tienes claves de API generadas. Crea una para empezar a programar.
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-900">
+                  <div className="divide-y divide-slate-100">
                     {apiKeys.map(k => (
                       <div key={k.id} className="py-4 flex justify-between items-center gap-4">
                         <div className="min-w-0 space-y-1">
-                          <h4 className="font-semibold text-slate-200 text-sm truncate">{k.name}</h4>
+                          <h4 className="font-semibold text-slate-700 text-sm truncate">{k.name}</h4>
                           <div className="flex flex-wrap gap-2">
                             {k.scopes.map(s => (
-                              <span key={s} className="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-semibold px-2 py-0.5 rounded-full">{s}</span>
+                              <span key={s} className="bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded-full">{s}</span>
                             ))}
                             {k.last_used_at && (
-                              <span className="text-[10px] text-slate-500">Último uso: {new Date(k.last_used_at).toLocaleDateString()}</span>
+                              <span className="text-[10px] text-slate-400">Último uso: {new Date(k.last_used_at).toLocaleDateString()}</span>
                             )}
                           </div>
                         </div>
-                        <button onClick={() => handleRevokeApiKey(k.id)} className="text-slate-500 hover:text-rose-400 p-2 hover:bg-slate-900 rounded transition-all shrink-0">
+                        <button onClick={() => handleRevokeApiKey(k.id)} className="text-slate-400 hover:text-red-600 p-2 hover:bg-slate-50 rounded transition-all shrink-0">
                           <Trash2 className="h-4.5 w-4.5" />
                         </button>
                       </div>
@@ -1242,29 +1301,29 @@ export default function App() {
               </div>
 
               {/* API Key instruction box */}
-              <div className="glass-panel p-6 rounded-2xl space-y-4">
-                <div className="h-10 w-10 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
+              <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-4">
+                <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
                   <Info className="h-5 w-5" />
                 </div>
-                <h3 className="font-bold text-white text-sm">¿Cómo usar tu API Key?</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Envía tu API Key en la cabecera HTTP de todas las peticiones externas. Puedes usar el endpoint de cabecera <code className="text-teal-400 bg-slate-950 px-1 py-0.5 rounded">X-API-Key</code> o <code className="text-teal-400 bg-slate-950 px-1 py-0.5 rounded">Authorization: Bearer [KEY]</code>.
+                <h3 className="font-bold text-slate-800 text-sm">¿Cómo usar tu API Key?</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Envía tu API Key en la cabecera HTTP de todas las peticiones externas. Puedes usar el endpoint de cabecera <code className="text-blue-600 bg-slate-100 px-1 py-0.5 rounded">X-API-Key</code> o <code className="text-blue-600 bg-slate-100 px-1 py-0.5 rounded">Authorization: Bearer [KEY]</code>.
                 </p>
-                <div className="text-xs border-t border-slate-900 pt-4 text-slate-500">
+                <div className="text-xs border-t border-slate-100 pt-4 text-slate-400">
                   El límite de llamadas con API Key es de <strong>60 peticiones por minuto</strong>.
                 </div>
               </div>
             </div>
 
             {/* Embedded Documentation code snippets */}
-            <div className="glass-panel p-6 rounded-2xl space-y-6">
-              <h3 className="font-bold text-white text-base">Ejemplos de Integración</h3>
+            <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6">
+              <h3 className="font-bold text-slate-800 text-base">Ejemplos de Integración</h3>
               
               <div className="space-y-4">
                 {/* Snippet 1 */}
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Listar archivos raíz (cURL)</span>
-                  <pre className="bg-slate-950 p-4 rounded-xl border border-slate-900 text-xs text-teal-400 overflow-x-auto font-mono">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Listar archivos raíz (cURL)</span>
+                  <pre className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-blue-600 overflow-x-auto font-mono">
                     {`curl -X GET "${API_URL}/files/list" \\
   -H "X-API-Key: tu_api_key_aqui"`}
                   </pre>
@@ -1272,8 +1331,8 @@ export default function App() {
 
                 {/* Snippet 2 */}
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Solicitar URL de subida prefirmada (Node.js/Axios)</span>
-                  <pre className="bg-slate-950 p-4 rounded-xl border border-slate-900 text-xs text-emerald-400 overflow-x-auto font-mono">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Solicitar URL de subida prefirmada (Node.js/Axios)</span>
+                  <pre className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-green-600 overflow-x-auto font-mono">
                     {`const axios = require('axios');
 
 axios.post('${API_URL}/files/upload-request', {
@@ -1297,35 +1356,35 @@ axios.post('${API_URL}/files/upload-request', {
         {view === 'history' && (
           <main className="p-8 space-y-8 flex-1 overflow-y-auto">
             <div>
-              <h1 className="text-2xl font-black text-white">Historial de Actividad</h1>
-              <p className="text-slate-400 text-sm mt-1 font-medium">Historial completo de auditoría y operaciones de seguridad.</p>
+              <h1 className="text-2xl font-black text-slate-800">Historial de Actividad</h1>
+              <p className="text-slate-500 text-sm mt-1 font-medium">Historial completo de auditoría y operaciones de seguridad.</p>
             </div>
 
-            <div className="glass-panel rounded-2xl p-6 overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="text-xs text-slate-500 uppercase border-b border-slate-800">
+            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="pb-3">Operación</th>
-                    <th className="pb-3">Detalle</th>
-                    <th className="pb-3">IP Origen</th>
-                    <th className="pb-3">Fecha y Hora</th>
+                    <th className="px-4 py-3">Operación</th>
+                    <th className="px-4 py-3">Detalle</th>
+                    <th className="px-4 py-3">IP Origen</th>
+                    <th className="px-4 py-3">Fecha y Hora</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-900">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {auditLogs.map((log, index) => (
-                    <tr key={log.id || index} className="hover:bg-slate-900/30">
-                      <td className="py-4">
+                    <tr key={log.id || index} className="hover:bg-slate-50">
+                      <td className="px-4 py-4">
                         <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md border ${
-                          log.action.includes('ALERT') || log.action.includes('SUSPEND') ? 'bg-rose-950/40 border-rose-900 text-rose-400' :
-                          log.action.includes('DOWNLOAD') || log.action.includes('SCAN') ? 'bg-emerald-950/40 border-emerald-900 text-emerald-400' :
-                          'bg-slate-900 border-slate-800 text-slate-300'
+                          log.action.includes('ALERT') || log.action.includes('SUSPEND') ? 'bg-red-50 border-red-200 text-red-600' :
+                          log.action.includes('DOWNLOAD') || log.action.includes('SCAN') ? 'bg-green-50 border-green-200 text-green-600' :
+                          'bg-slate-100 border-slate-200 text-slate-600'
                         }`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="py-4 text-xs font-semibold text-slate-200 truncate max-w-[280px]">{log.details}</td>
-                      <td className="py-4 text-xs text-slate-500 font-mono">{log.ip_address}</td>
-                      <td className="py-4 text-xs text-slate-400">{new Date(log.created_at).toLocaleString()}</td>
+                      <td className="px-4 py-4 text-xs font-semibold text-slate-700 truncate max-w-[280px]">{log.details}</td>
+                      <td className="px-4 py-4 text-xs text-slate-500 font-mono">{log.ip_address}</td>
+                      <td className="px-4 py-4 text-xs text-slate-400">{new Date(log.created_at).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1333,15 +1392,166 @@ axios.post('${API_URL}/files/upload-request', {
             </div>
           </main>
         )}
+
+        {/* Documentation View */}
+        {view === 'docs' && (
+          <main className="p-8 flex-1 overflow-y-auto animate-fade-in max-w-4xl mx-auto w-full">
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">Documentación de la API</h1>
+            <p className="text-slate-500 mb-8">Guía completa para integrar Nexus Storage en tus aplicaciones.</p>
+            
+            {/* Section: Authentication */}
+            <section className="mb-8">
+              <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2"><Key className="h-5 w-5 text-blue-500" /> Autenticación</h2>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+                <p className="text-sm text-slate-600">Todas las peticiones requieren autenticación mediante una API Key. Puedes generar una desde la sección <strong>API Keys</strong>.</p>
+                <p className="text-sm text-slate-600">Envía tu clave en el header <code className="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono text-slate-800">X-API-Key</code> o como <code className="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono text-slate-800">Authorization: Bearer tu_key</code></p>
+                <p className="text-sm text-slate-500">Límite: <strong>60 peticiones por minuto</strong> por IP.</p>
+              </div>
+            </section>
+
+            {/* Section: Endpoints */}
+            <section className="mb-8">
+              <h2 className="text-lg font-semibold text-slate-800 mb-3">Endpoints Disponibles</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border border-slate-200 rounded-xl overflow-hidden bg-white">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-slate-600 font-medium">Método</th>
+                      <th className="text-left px-4 py-3 text-slate-600 font-medium">Ruta</th>
+                      <th className="text-left px-4 py-3 text-slate-600 font-medium">Descripción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr className="hover:bg-slate-50"><td className="px-4 py-3"><span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-mono font-bold">GET</span></td><td className="px-4 py-3 font-mono text-xs text-slate-700">/files/list</td><td className="px-4 py-3 text-slate-600">Listar archivos y carpetas</td></tr>
+                    <tr className="hover:bg-slate-50"><td className="px-4 py-3"><span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-mono font-bold">POST</span></td><td className="px-4 py-3 font-mono text-xs text-slate-700">/files/upload-request</td><td className="px-4 py-3 text-slate-600">Solicitar URL prefirmada de subida</td></tr>
+                    <tr className="hover:bg-slate-50"><td className="px-4 py-3"><span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-mono font-bold">GET</span></td><td className="px-4 py-3 font-mono text-xs text-slate-700">/files/download/:id</td><td className="px-4 py-3 text-slate-600">Obtener URL de descarga</td></tr>
+                    <tr className="hover:bg-slate-50"><td className="px-4 py-3"><span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-mono font-bold">DELETE</span></td><td className="px-4 py-3 font-mono text-xs text-slate-700">/files/:id</td><td className="px-4 py-3 text-slate-600">Eliminar archivo</td></tr>
+                    <tr className="hover:bg-slate-50"><td className="px-4 py-3"><span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-mono font-bold">POST</span></td><td className="px-4 py-3 font-mono text-xs text-slate-700">/files/folders</td><td className="px-4 py-3 text-slate-600">Crear carpeta</td></tr>
+                    <tr className="hover:bg-slate-50"><td className="px-4 py-3"><span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-mono font-bold">POST</span></td><td className="px-4 py-3 font-mono text-xs text-slate-700">/shares</td><td className="px-4 py-3 text-slate-600">Crear enlace compartido</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Section: Code Examples */}
+            <section className="mb-8">
+              <h2 className="text-lg font-semibold text-slate-800 mb-3">Ejemplos de Código</h2>
+              
+              {/* cURL */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">cURL — Listar archivos</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`curl -X GET "${API_URL}/files/list" \\
+  -H "X-API-Key: tu_api_key_aqui"`}</code></pre>
+              </div>
+
+              {/* JavaScript */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">JavaScript (Fetch) — Listar archivos</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`const response = await fetch('${API_URL}/files/list', {
+  headers: { 'X-API-Key': 'tu_api_key_aqui' }
+});
+const data = await response.json();
+console.log(data.files);`}</code></pre>
+              </div>
+
+              {/* JavaScript Upload */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">JavaScript (Axios) — Subir archivo</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`const axios = require('axios');
+
+// 1. Solicitar URL prefirmada
+const { data } = await axios.post('${API_URL}/files/upload-request', {
+  name: 'foto.jpg',
+  size: 153600,
+  mime_type: 'image/jpeg'
+}, {
+  headers: { 'X-API-Key': 'tu_api_key_aqui' }
+});
+
+// 2. Subir directamente a MinIO
+await axios.put(data.presigned_url, fileBuffer, {
+  headers: { 'Content-Type': 'image/jpeg' }
+});`}</code></pre>
+              </div>
+
+              {/* Python */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Python (requests) — Listar archivos</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`import requests
+
+response = requests.get(
+    '${API_URL}/files/list',
+    headers={'X-API-Key': 'tu_api_key_aqui'}
+)
+print(response.json())`}</code></pre>
+              </div>
+
+              {/* Python Upload */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Python (requests) — Subir archivo</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`import requests
+
+# 1. Solicitar URL prefirmada
+res = requests.post('${API_URL}/files/upload-request', json={
+    'name': 'documento.pdf',
+    'size': 153600,
+    'mime_type': 'application/pdf'
+}, headers={'X-API-Key': 'tu_api_key_aqui'})
+
+presigned_url = res.json()['presigned_url']
+
+# 2. Subir directamente
+with open('documento.pdf', 'rb') as f:
+    requests.put(presigned_url, data=f, headers={'Content-Type': 'application/pdf'})`}</code></pre>
+              </div>
+
+              {/* PHP */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">PHP (cURL) — Listar archivos</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`$ch = curl_init('${API_URL}/files/list');
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-API-Key: tu_api_key_aqui'
+]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+$data = json_decode($response, true);
+print_r($data);`}</code></pre>
+              </div>
+
+              {/* Go */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Go (net/http) — Listar archivos</h3>
+                <pre className="bg-slate-50 border border-slate-200 text-slate-800 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>{`package main
+
+import (
+    "fmt"
+    "io"
+    "net/http"
+)
+
+func main() {
+    req, _ := http.NewRequest("GET", "${API_URL}/files/list", nil)
+    req.Header.Set("X-API-Key", "tu_api_key_aqui")
+    
+    resp, _ := http.DefaultClient.Do(req)
+    defer resp.Body.Close()
+    body, _ := io.ReadAll(resp.Body)
+    fmt.Println(string(body))
+}`}</code></pre>
+              </div>
+            </section>
+          </main>
+        )}
+
       </div>
 
       {/* -------------------- MODALS -------------------- */}
 
       {/* New Folder Modal */}
       {isFolderModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full glass-panel rounded-2xl p-6 shadow-2xl relative">
-            <h3 className="text-lg font-bold text-white mb-4">Crear Nueva Carpeta</h3>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Crear Nueva Carpeta</h3>
             <form onSubmit={handleCreateFolder} className="space-y-4">
               <input 
                 type="text" 
@@ -1349,11 +1559,11 @@ axios.post('${API_URL}/files/upload-request', {
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 placeholder="Nombre de la carpeta" 
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:border-teal-500 outline-none text-white transition-all"
+                className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 outline-none text-slate-800 transition-all"
               />
               <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setIsFolderModalOpen(false)} className="btn-secondary text-xs py-2">Cancelar</button>
-                <button type="submit" className="btn-primary text-xs py-2">Crear Carpeta</button>
+                <button type="button" onClick={() => setIsFolderModalOpen(false)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-4 py-2 text-xs font-medium transition-all">Cancelar</button>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-xs font-medium transition-all">Crear Carpeta</button>
               </div>
             </form>
           </div>
@@ -1362,11 +1572,11 @@ axios.post('${API_URL}/files/upload-request', {
 
       {/* Share File Modal */}
       {isShareModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full glass-panel rounded-2xl p-6 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">Compartir archivo: {shareTargetFile?.name}</h3>
-              <button onClick={() => setIsShareModalOpen(false)} className="text-slate-500 hover:text-slate-200">
+              <h3 className="text-lg font-bold text-slate-800">Compartir archivo: {shareTargetFile?.name}</h3>
+              <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1374,25 +1584,25 @@ axios.post('${API_URL}/files/upload-request', {
             {!generatedShareToken ? (
               <form onSubmit={handleCreateShareLink} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-semibold block">Contraseña de acceso (Opcional)</label>
+                  <label className="text-xs text-slate-500 font-semibold block">Contraseña de acceso (Opcional)</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <input 
                       type="password" 
                       value={sharePass}
                       onChange={(e) => setSharePass(e.target.value)}
                       placeholder="Contraseña del enlace" 
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs focus:border-teal-500 outline-none text-white"
+                      className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-4 py-2 text-xs focus:border-blue-500 outline-none text-slate-800 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-semibold block">Duración del enlace</label>
+                  <label className="text-xs text-slate-500 font-semibold block">Duración del enlace</label>
                   <select 
                     value={shareExpiry}
                     onChange={(e) => setShareExpiry(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:border-teal-500 outline-none text-white"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:border-blue-500 outline-none text-slate-800 transition-all"
                   >
                     <option value="0">Ilimitada</option>
                     <option value="1">1 Hora</option>
@@ -1401,20 +1611,20 @@ axios.post('${API_URL}/files/upload-request', {
                   </select>
                 </div>
 
-                <button type="submit" className="btn-primary w-full justify-center text-xs py-2.5">Generar Enlace</button>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full flex justify-center items-center text-xs font-medium py-2.5 transition-all">Generar Enlace</button>
               </form>
             ) : (
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <p className="text-[11px] text-slate-400 font-semibold">Página de Descarga (Pública):</p>
+                  <p className="text-[11px] text-slate-500 font-semibold">Página de Descarga (Pública):</p>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
                       readOnly 
                       value={generatedShareToken}
-                      className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-teal-400 focus:outline-none"
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-blue-600 focus:outline-none"
                     />
-                    <button onClick={() => copyToClipboard(generatedShareToken)} className="btn-secondary text-xs shrink-0 p-2" title="Copiar enlace">
+                    <button onClick={() => copyToClipboard(generatedShareToken)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium shrink-0 p-2 transition-all" title="Copiar enlace">
                       <Copy className="h-4 w-4" />
                     </button>
                   </div>
@@ -1422,22 +1632,22 @@ axios.post('${API_URL}/files/upload-request', {
 
                 {!sharePass && (
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-semibold">Enlace Directo (para incrustar en web/logo):</p>
+                    <p className="text-[11px] text-slate-500 font-semibold">Enlace Directo (para incrustar en web/logo):</p>
                     <div className="flex gap-2">
                       <input 
                         type="text" 
                         readOnly 
                         value={generatedEmbedLink}
-                        className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-teal-400 focus:outline-none"
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-blue-600 focus:outline-none"
                       />
-                      <button onClick={() => copyToClipboard(generatedEmbedLink)} className="btn-secondary text-xs shrink-0 p-2" title="Copiar enlace directo">
+                      <button onClick={() => copyToClipboard(generatedEmbedLink)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium shrink-0 p-2 transition-all" title="Copiar enlace directo">
                         <Copy className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 )}
                 
-                <button onClick={() => setIsShareModalOpen(false)} className="btn-primary w-full justify-center text-xs py-2 mt-2">Listo</button>
+                <button onClick={() => setIsShareModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full flex justify-center items-center text-xs font-medium py-2 mt-2 transition-all">Listo</button>
               </div>
             )}
           </div>
@@ -1446,11 +1656,11 @@ axios.post('${API_URL}/files/upload-request', {
 
       {/* Generate API Key Modal */}
       {isKeyModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full glass-panel rounded-2xl p-6 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-xl relative space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">Generar nueva API Key</h3>
-              <button onClick={() => setIsKeyModalOpen(false)} className="text-slate-500 hover:text-slate-200">
+              <h3 className="text-lg font-bold text-slate-800">Generar nueva API Key</h3>
+              <button onClick={() => setIsKeyModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1458,53 +1668,53 @@ axios.post('${API_URL}/files/upload-request', {
             {!generatedKeyRaw ? (
               <form onSubmit={handleCreateApiKey} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-semibold block">Nombre descriptivo</label>
+                  <label className="text-xs text-slate-500 font-semibold block">Nombre descriptivo</label>
                   <input 
                     type="text" 
                     required 
                     value={newKeyName}
                     onChange={(e) => setNewKeyName(e.target.value)}
                     placeholder="ej. Servidor de Producción" 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-xs focus:border-teal-500 outline-none text-white transition-all"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-xs focus:border-blue-500 outline-none text-slate-800 transition-all"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-slate-400 font-semibold block">Permisos (Scopes)</label>
+                  <label className="text-xs text-slate-500 font-semibold block">Permisos (Scopes)</label>
                   <div className="flex gap-4">
-                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <label className="flex items-center gap-2 text-xs text-slate-600 font-medium">
                       <input 
                         type="checkbox" 
                         checked={newKeyScopes.read} 
                         onChange={(e) => setNewKeyScopes({...newKeyScopes, read: e.target.checked})}
-                        className="accent-teal-500"
+                        className="accent-blue-600"
                       /> Leer (read)
                     </label>
-                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <label className="flex items-center gap-2 text-xs text-slate-600 font-medium">
                       <input 
                         type="checkbox" 
                         checked={newKeyScopes.write} 
                         onChange={(e) => setNewKeyScopes({...newKeyScopes, write: e.target.checked})}
-                        className="accent-teal-500"
+                        className="accent-blue-600"
                       /> Escribir (write)
                     </label>
-                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <label className="flex items-center gap-2 text-xs text-slate-600 font-medium">
                       <input 
                         type="checkbox" 
                         checked={newKeyScopes.delete} 
                         onChange={(e) => setNewKeyScopes({...newKeyScopes, delete: e.target.checked})}
-                        className="accent-teal-500"
+                        className="accent-blue-600"
                       /> Borrar (delete)
                     </label>
                   </div>
                 </div>
 
-                <button type="submit" className="btn-primary w-full justify-center text-xs py-2.5">Generar Credencial</button>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full flex justify-center items-center text-xs font-medium py-2.5 transition-all">Generar Credencial</button>
               </form>
             ) : (
               <div className="space-y-4">
-                <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-lg text-amber-300 text-xs flex gap-2">
-                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" />
+                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-700 text-xs flex gap-2">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
                   <span>Por seguridad, guarda esta clave en un lugar seguro ahora. No podrás volver a verla de nuevo.</span>
                 </div>
                 <div className="flex gap-2">
@@ -1512,13 +1722,13 @@ axios.post('${API_URL}/files/upload-request', {
                     type="text" 
                     readOnly 
                     value={generatedKeyRaw}
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-emerald-400 focus:outline-none"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-green-700 focus:outline-none"
                   />
-                  <button onClick={() => copyToClipboard(generatedKeyRaw)} className="btn-secondary text-xs shrink-0 p-2">
+                  <button onClick={() => copyToClipboard(generatedKeyRaw)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium shrink-0 p-2 transition-all">
                     <Copy className="h-4 w-4" />
                   </button>
                 </div>
-                <button onClick={() => { setIsKeyModalOpen(false); setGeneratedKeyRaw(''); }} className="btn-primary w-full justify-center text-xs py-2">Cerrar</button>
+                <button onClick={() => { setIsKeyModalOpen(false); setGeneratedKeyRaw(''); }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full flex justify-center items-center text-xs font-medium py-2 transition-all">Cerrar</button>
               </div>
             )}
           </div>
@@ -1527,18 +1737,18 @@ axios.post('${API_URL}/files/upload-request', {
 
       {/* Confirm Modal */}
       {confirmModal.open && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-sm w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-amber-400" />
+              <div className="p-2 bg-amber-50 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-amber-500" />
               </div>
-              <h3 className="text-lg font-semibold text-white">{confirmModal.title}</h3>
+              <h3 className="text-lg font-semibold text-slate-800">{confirmModal.title}</h3>
             </div>
-            <p className="text-sm text-slate-400">{confirmModal.message}</p>
+            <p className="text-sm text-slate-500">{confirmModal.message}</p>
             <div className="flex gap-3 justify-end pt-2">
-              <button onClick={closeConfirm} className="btn-secondary text-sm px-4 py-2">Cancelar</button>
-              <button onClick={() => { confirmModal.onConfirm(); closeConfirm(); }} className="btn-danger text-sm px-4 py-2">Confirmar</button>
+              <button onClick={closeConfirm} className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm px-4 py-2 font-medium transition-all">Cancelar</button>
+              <button onClick={() => { confirmModal.onConfirm(); closeConfirm(); }} className="bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm px-4 py-2 font-medium transition-all">Confirmar</button>
             </div>
           </div>
         </div>
@@ -1548,11 +1758,11 @@ axios.post('${API_URL}/files/upload-request', {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
         {toasts.map(t => (
           <div key={t.id} className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border shadow-lg text-sm transition-all duration-300 animate-slide-in ${
-            t.type === 'error' ? 'bg-rose-950/80 border-rose-800 text-rose-200' :
-            t.type === 'info' ? 'bg-slate-900 border-slate-800 text-slate-200' :
-            'bg-teal-950/80 border-teal-800 text-teal-200'
+            t.type === 'error' ? 'bg-white border-red-200 text-red-700' :
+            t.type === 'info' ? 'bg-white border-blue-200 text-blue-700' :
+            'bg-white border-green-200 text-green-700'
           }`}>
-            {t.type === 'error' ? <AlertTriangle className="h-4 w-4 text-rose-400" /> : <CheckCircle className="h-4 w-4 text-teal-400" />}
+            {t.type === 'error' ? <AlertTriangle className="h-4 w-4 text-red-600" /> : <CheckCircle className="h-4 w-4 text-green-600" />}
             <span>{t.message}</span>
           </div>
         ))}
