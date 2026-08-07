@@ -313,7 +313,7 @@ func GetProfile(c *fiber.Ctx) error {
 	// Count files and folders
 	var fileCount int64
 	var folderCount int64
-	db.DB.Model(&models.File{}).Where("user_id = ?", user.ID).Count(&fileCount)
+	db.DB.Model(&models.File{}).Where("user_id = ? AND scan_status != ?", user.ID, "uploading").Count(&fileCount)
 	db.DB.Model(&models.Folder{}).Where("user_id = ?", user.ID).Count(&folderCount)
 
 	return c.JSON(fiber.Map{
